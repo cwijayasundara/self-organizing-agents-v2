@@ -1,0 +1,5 @@
+{
+  "note": "Template only. Populate verified model identifiers, prices, and families after author-adapter integration. This file cannot open the live gate.",
+  "models": {},
+  "bootstrap": []
+}
