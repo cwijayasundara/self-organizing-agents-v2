@@ -4,6 +4,7 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 from .demo import replay
+from .observer import make_server
 from .models.live import validate_live_config,LiveUnavailable
 
 
@@ -19,7 +20,20 @@ def main():
     run.add_argument('--models',type=Path,required=True)
     run.add_argument('--budget-usd',type=float)
     run.add_argument('--out',type=Path,required=True)
+    observe=sub.add_parser('observe',help='Serve a read-only run observer')
+    observe.add_argument('path',type=Path)
+    observe.add_argument('--port',type=int,default=8765)
     args=parser.parse_args()
+    if args.command=='observe':
+        server=make_server(args.path,args.port)
+        print(f'Read-only observer: http://127.0.0.1:{server.server_port}',flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.server_close()
+        return 0
     if args.command=='run':
         try:
             validate_live_config(json.loads(args.models.read_text()),args.budget_usd)

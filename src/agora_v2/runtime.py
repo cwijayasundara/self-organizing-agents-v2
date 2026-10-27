@@ -19,6 +19,7 @@ class Runtime:
         self.mission,self.ledger,self.membership,self.gateway,self.budget,self.slots,self.dispatcher,self.output,self.mode=mission,ledger,membership,gateway,budget,slots,dispatcher,output,mode
         self.context,self.evidence=dispatcher.context,dispatcher.evidence
         self.schedule=schedule
+        self.ledger.db.execute("INSERT OR REPLACE INTO meta VALUES('mode',?)",(mode,))
         self.cancelled=asyncio.Event()
         self.peers={}
 
