@@ -4,6 +4,7 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 from .demo import replay
+from .eval.runner import evaluate
 from .observer import make_server
 from .models.live import validate_live_config,LiveUnavailable
 
@@ -23,7 +24,14 @@ def main():
     observe=sub.add_parser('observe',help='Serve a read-only run observer')
     observe.add_argument('path',type=Path)
     observe.add_argument('--port',type=int,default=8765)
+    evaluation=sub.add_parser('evaluate',help='Score held-out exports without running live arms')
+    evaluation.add_argument('--config',type=Path,required=True)
+    evaluation.add_argument('--out',type=Path,required=True)
     args=parser.parse_args()
+    if args.command=='evaluate':
+        report=asyncio.run(evaluate(args.config,args.out))
+        print(json.dumps(report,indent=2))
+        return 0
     if args.command=='observe':
         server=make_server(args.path,args.port)
         print(f'Read-only observer: http://127.0.0.1:{server.server_port}',flush=True)
