@@ -50,7 +50,7 @@ class SemanticBridge:
             async with execution.yield_to_child():
                 async with self.slots.enter('leaf',ident) as leaf:
                     leaf.billing_identity=execution.identity
-                    response=await self.gateway.call(ModelRequest(message['model_key'],prompt,message['max_output_tokens']),'exploration',leaf)
+                    response=await self.gateway.call(ModelRequest(message['model_key'],prompt,message['max_output_tokens']),getattr(execution,'purpose','exploration'),leaf)
             h=self.store.put(response.content,tuple(sorted(refs)))
             self.allowed.add(h)
             self.gateway.budget.ledger.event(execution.identity,'semantic_call_finished',{'identity':ident,'handle':h})

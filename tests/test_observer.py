@@ -39,3 +39,10 @@ def test_active_database_observation_does_not_initialize_or_mutate(tmp_path):
     assert len(data['peers'])==3
     assert runtime.ledger.events()==before
     runtime.ledger.close()
+
+
+def test_completed_database_snapshot_has_persisted_status_and_memo(tmp_path):
+    asyncio.run(replay(tmp_path/'run'))
+    data=read_snapshot(tmp_path/'run/run.db')
+    assert data['status']=='completed'
+    assert 'RESEARCH_SUMMARY' in data['final_memo']

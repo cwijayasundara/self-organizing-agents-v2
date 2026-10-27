@@ -29,6 +29,10 @@ assert 'AGORA_TEST_SECRET' not in os.environ
 assert 'OPENAI_API_KEY' not in os.environ
 assert 'ANTHROPIC_API_KEY' not in os.environ
 try:
+    socket.create_connection(('1.1.1.1',53),timeout=.2)
+    raise AssertionError('unrestricted network')
+except OSError: pass
+try:
     open('/write','w')
     raise AssertionError('root writable')
 except OSError: pass
@@ -59,3 +63,35 @@ async def test_runaway_timeout_and_output_limit_cleanup(tmp_path):
             await executor.execute("print('x'*200000)",[],ex)
     await executor.close()
     assert not executor.containers
+
+
+async def test_cancel_during_semantic_call_removes_real_container(tmp_path):
+    started=asyncio.Event()
+    class Hanging:
+        async def complete(self,request):
+            started.set()
+            await asyncio.Event().wait()
+    store=ContextStore(tmp_path/'context')
+    h=store.put('evidence',('README.md',))
+    l=Ledger(tmp_path/'db')
+    budget=Budget(l,Limits())
+    slots=ExecutionSlots(1)
+    gateway=Gateway({'fake':Hanging()},{'fake':Price(.01,.01)},budget)
+    executor=DockerExecutor(store,gateway,slots)
+    async def work():
+        async with slots.enter('peer','p') as ex:
+            return await executor.execute(f"semantic_call('fake',[{h!r}],'check',100)",[h],ex)
+    task=asyncio.create_task(work())
+    await asyncio.wait_for(started.wait(),10)
+    names=list(executor.containers)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await asyncio.wait_for(task,10)
+    assert not executor.containers and slots.active==0
+    assert budget.totals()['unresolved_micro']>0
+    for name in names:
+        proc=await asyncio.create_subprocess_exec('docker','inspect',name,stdout=asyncio.subprocess.DEVNULL,stderr=asyncio.subprocess.DEVNULL)
+        await proc.wait()
+        assert proc.returncode!=0
+    await executor.close()
+    l.close()

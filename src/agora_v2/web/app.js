@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 function node(tag,text,cls){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;return el;}
 function card(parent,title,details,cls){const el=node('div','',cls);el.append(node('strong',title));for(const detail of details)el.append(node('small',detail));parent.append(el);}
 function reduce(events){
- const state={peers:{},tasks:{},leaves:{},reservations:{},settled:0,calls:0,scope:0,status:'running',memo:false};
+ const state={peers:{},tasks:{},leaves:{},reservations:{},settled:0,calls:0,scope:0,status:'running',memo_artifact_id:null};
  for(const e of events){const p=e.payload;switch(e.type){
  case 'peer_joined':state.peers[e.actor]={state:'ready',family:p.family,reason:p.reason||'Bootstrap generalist'};break;
  case 'peer_state':if(state.peers[e.actor])state.peers[e.actor].state=p.state;break;
@@ -12,7 +12,7 @@ function reduce(events){
  case 'task_proposed':state.tasks[p.task_id]={key:p.key,state:'open',final:p.spec.final};break;
  case 'task_claimed':if(state.tasks[p.task_id])Object.assign(state.tasks[p.task_id],{state:'claimed by '+e.actor});break;
  case 'claim_released':case 'claim_expired':if(state.tasks[p.task_id])state.tasks[p.task_id].state='open';break;
- case 'artifact_published':if(state.tasks[p.task_id]){state.tasks[p.task_id].state='awaiting independent review';if(state.tasks[p.task_id].final)state.memo=true;}break;
+ case 'artifact_published':if(state.tasks[p.task_id]){state.tasks[p.task_id].state='awaiting independent review';if(state.tasks[p.task_id].final)state.memo_artifact_id=p.artifact_id;}break;
  case 'artifact_reviewed':{const a=trace.artifacts.find(a=>a.id===p.artifact_id);if(a&&state.tasks[a.task])state.tasks[a.task].state=p.approved?'reviewed':'repair requested';break;}
  case 'scope_reviewed':if(p.approved){state.scope=p.scope_version;for(const t of Object.values(state.tasks))if(t.final)t.state='scope updated; final must be checked';}break;
  case 'semantic_call_started':state.leaves[p.identity]='analyzing supplied evidence';break;
@@ -33,7 +33,7 @@ function render(){
  $('tasks').replaceChildren();for(const t of Object.values(s.tasks))card($('tasks'),t.key,[t.state],'task');
  $('leaves').replaceChildren();for(const [id,status] of Object.entries(s.leaves))card($('leaves'),id.split(':').slice(0,2).join(' · '),[status,'No task claims or voting authority'],'leaf');if(!Object.keys(s.leaves).length)$('leaves').append(node('p','No semantic calls in the displayed events.','muted'));
  $('events').replaceChildren();for(const e of visible.slice(-70).reverse()){const li=node('li',describe(e));li.append(node('small',`#${e.seq} · ${e.actor}`));$('events').append(li);}
- $('memo').textContent=s.memo?trace.final_memo:'';$('memo-note').textContent=`Scope v${s.scope} · Unresolved reservations: $${(Object.values(s.reservations).reduce((a,b)=>a+b,0)/1e6).toFixed(6)}`;
+ $('memo').textContent=(trace.artifacts.find(a=>a.id===s.memo_artifact_id)||{}).content||'';$('memo-note').textContent=`Scope v${s.scope} · Unresolved reservations: $${(Object.values(s.reservations).reduce((a,b)=>a+b,0)/1e6).toFixed(6)}`;
 }
 $('cursor').oninput=()=>{follow=false;cursor=Number($('cursor').value);render();};
 $('start').onclick=()=>{follow=false;cursor=0;render();};$('end').onclick=()=>{follow=true;cursor=trace.events.length;render();};

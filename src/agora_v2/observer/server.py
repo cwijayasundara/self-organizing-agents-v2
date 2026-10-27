@@ -19,7 +19,10 @@ def read_snapshot(path: Path):
         result={name:[dict(r) for r in db.execute(f'SELECT * FROM {name}')] for name in ('peers','tasks','artifacts','scopes','helper_proposals','calls')}
         result['events']=[{**dict(r),'payload':json.loads(r['payload'])} for r in db.execute('SELECT * FROM events ORDER BY seq')]
         metadata=dict(db.execute('SELECT key,value FROM meta'))
-        result.update({'format_version':1,'mode':metadata.get('mode','unknown'),'status':'running','final_memo':''})
+        finished=next((e for e in reversed(result['events']) if e['type']=='run_finished'),None)
+        final_ids={t['id'] for t in result['tasks'] if t['final']}
+        final=next((a for a in reversed(result['artifacts']) if a['task'] in final_ids),None)
+        result.update({'format_version':1,'mode':metadata.get('mode','unknown'),'status':finished['payload']['status'] if finished else 'running','final_memo':final['content'] if final else ''})
         return result
     finally:
         db.close()

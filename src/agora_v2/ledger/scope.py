@@ -73,6 +73,8 @@ class Scope:
             row = self.db.execute("SELECT a.id FROM artifacts a JOIN tasks t ON t.id=a.task WHERE t.id=? AND t.state='approved' AND a.approved=1 ORDER BY a.version DESC LIMIT 1", (task,)).fetchone()
             if row is None:
                 return None
+            if task == final['id'] and self.db.execute('SELECT scope_version FROM artifacts WHERE id=?', (row['id'],)).fetchone()[0] != self.scope_version:
+                return None
             ids.append(row['id'])
         return CompletionSnapshot(self.scope_version, tuple(ids))
 

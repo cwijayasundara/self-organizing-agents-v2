@@ -4,7 +4,7 @@ import time
 from .budget import BudgetExhausted
 from .outcome import OutcomeChecker
 from .peer import Peer
-from .trace import snapshot,export_run
+from .trace import peer_snapshot,export_run
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ class Runtime:
         async def episodes():
             nonlocal status,round_index
             scripted_index=0
+            waiting_steps=0
             while not self.cancelled.is_set():
                 self.evidence.metadata()  # Hash validation also catches changed/unavailable evidence.
                 active=[dict(r) for r in self.ledger.db.execute("SELECT * FROM peers WHERE state NOT IN ('retired','failed','draining') ORDER BY id")]
@@ -54,12 +55,22 @@ class Runtime:
                 if ident not in self.peers:
                     self.peers[ident]=Peer(ident,selected['model_key'],mission,self.gateway,self.dispatcher)
                 self.ledger.expire_claims(self.ledger.clock())
-                view=snapshot(self.ledger)
+                view=peer_snapshot(self.ledger)
                 view['scope_version']=self.ledger.scope_version
                 view['identity']=ident
                 view['events']=self.ledger.events()[-25:]
+                for event in view['events']:
+                    for key in ('content','reason'):
+                        value=event['payload'].get(key)
+                        if isinstance(value,str) and len(value)>1000:
+                            event['payload'][key]=value[:1000]
+                            event['payload'][key+'_truncated']=True
                 async with self.slots.enter('peer',ident) as execution:
-                    await self.peers[ident].step(view,execution)
+                    step_result=await self.peers[ident].step(view,execution)
+                waiting_steps=waiting_steps+1 if step_result.get('waiting') else 0
+                if self.schedule is None and waiting_steps>=2*len(active):
+                    status='stalled'
+                    return
                 candidate=self.ledger.completion_snapshot()
                 if candidate:
                     checker=OutcomeChecker(self.ledger,self.evidence,mission,self.gateway,self.slots)

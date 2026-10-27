@@ -24,12 +24,17 @@ class Execution:
         if self.kind != 'peer' or not self.held:
             raise ValueError('only an executing peer can create a semantic leaf')
         self.release()
+        cancelled = False
         try:
             yield
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
         finally:
-            # If cancellation happens here enter() still owns cleanup, without
-            # releasing a permit the parent never reacquired.
-            await self.acquire()
+            # A cancelled parent owns no further execution and must not queue
+            # behind unrelated work while unwinding its child's cancellation.
+            if not cancelled:
+                await self.acquire()
 
 
 class ExecutionSlots:

@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-27-dynamic-swarm-design.md`
 
+## Execution status — 2026-10-27
+
+Tasks 1–7 and 10 are implemented and verified. Task 8 has a tested project-owned Docker executor and a recorded upstream limit-method probe; a complete author-package adapter remains unverified. Task 9 implements preflight/refusal only, with provider adapters and live smoke pending. Task 11 implements held-out export scoring, with actual baseline/live runners and architectural comparisons pending. See `docs/implementation-status.md` for evidence and limitations. This plan is not complete.
+
 ## Global Constraints
 
 - Preserve v1 without modifications or runtime imports. Do not copy credentials, virtual environments, generated run databases, or Git history.
@@ -44,10 +48,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** Frozen `Limits` and `Mission` dataclasses; `load_mission(path: Path) -> Mission`; `EvidenceStore(manifest: Path).read(ref: str, start: int, length: int) -> str`; `.metadata() -> list[EvidenceMetadata]`. Evidence references identify manifest files and bounded ranges.
 
-- [ ] Write tests for exact defaults, invalid limits, immutable brief/rubric, hash mismatch, bounded reads, unknown files, absolute/traversal paths and symlink escape; assert gold is absent from the manifest and peer-visible payloads.
-- [ ] Run `uv run pytest tests/test_mission_evidence.py -q`; confirm behavior fails before implementation.
-- [ ] Create installable package with pytest dev tooling. Copy only v1's brief and nine source files; copy gold into evaluator-only location. Record source revision, original paths and SHA-256 values. Preserve the five summary keys and under-450-word memo rubric. Reject evidence links outside the declared root and enforce reads against verified files.
-- [ ] Run the test command successfully, then `uv build` and verify installed import/entry-point packaging. Commit the task.
+- [x] Write tests for exact defaults, invalid limits, immutable brief/rubric, hash mismatch, bounded reads, unknown files, absolute/traversal paths and symlink escape; assert gold is absent from the manifest and peer-visible payloads.
+- [x] Run `uv run pytest tests/test_mission_evidence.py -q`; confirm behavior fails before implementation.
+- [x] Create installable package with pytest dev tooling. Copy only v1's brief and nine source files; copy gold into evaluator-only location. Record source revision, original paths and SHA-256 values. Preserve the five summary keys and under-450-word memo rubric. Reject evidence links outside the declared root and enforce reads against verified files.
+- [x] Run the test command successfully, then `uv build` and verify installed import/entry-point packaging. Commit the task.
 
 ### Task 2: Transactional ledger, claims, artifacts, events
 
@@ -55,10 +59,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `Ledger(path: Path)`; `propose_task(spec: TaskSpec) -> Task`; `claim(task_id: str, peer_id: str, lease_seconds: float) -> ClaimResult`; `publish(claim: Claim, content: str, evidence: list[EvidenceRef]) -> Artifact`; `expire_claims(now: float) -> int`; `events(after: int) -> list[Event]`. Claim includes a unique fencing token. TaskSpec includes objective, deliverable key, schema, evidence requirements, acceptance criteria and dependency IDs.
 
-- [ ] Write competing-connection tests: normalized duplicate proposals return one ID; one claimant wins; conflict identifies current holder/expiry; dependencies block claim; expired token cannot publish; artifact and event writes commit atomically. Reject dependency cycles and missing IDs.
-- [ ] Run `uv run pytest tests/test_ledger.py -q`; confirm failure.
-- [ ] Implement schema/version metadata and atomic transactions, using SQLite constraints and conditional updates. Store append-only events with monotonic sequence, actor, type and structured payload; artifacts are immutable versions. A review records reviewer identity and the exact artifact version.
-- [ ] Rerun ledger tests successfully and commit.
+- [x] Write competing-connection tests: normalized duplicate proposals return one ID; one claimant wins; conflict identifies current holder/expiry; dependencies block claim; expired token cannot publish; artifact and event writes commit atomically. Reject dependency cycles and missing IDs.
+- [x] Run `uv run pytest tests/test_ledger.py -q`; confirm failure.
+- [x] Implement schema/version metadata and atomic transactions, using SQLite constraints and conditional updates. Store append-only events with monotonic sequence, actor, type and structured payload; artifacts are immutable versions. A review records reviewer identity and the exact artifact version.
+- [x] Rerun ledger tests successfully and commit.
 
 ### Task 3: Independently reviewed versioned scope
 
@@ -66,10 +70,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `propose_scope(author: str, required_task_ids: list[str], base_version: int) -> ScopeProposal`; `review_scope(proposal_id: str, reviewer: str, approve: bool, reason: str) -> ScopeDecision`; `completion_snapshot() -> CompletionSnapshot` containing accepted scope version and required artifact versions.
 
-- [ ] Test unreviewed initial scope blocks final claim, self-review fails, stale amendments fail, accepted amendment updates final dependencies atomically, and critical rejected changes remain unresolved. Optional tasks do not block; promoting them requires reviewed scope amendment. A late amendment invalidates a prior completion snapshot.
-- [ ] Run `uv run pytest tests/test_scope.py -q`; confirm failure.
-- [ ] Implement scope proposals and approvals against active identities, version checks and transactional dependency changes. Bind review and completion to exact versions.
-- [ ] Rerun scope/ledger tests successfully and commit.
+- [x] Test unreviewed initial scope blocks final claim, self-review fails, stale amendments fail, accepted amendment updates final dependencies atomically, and critical rejected changes remain unresolved. Optional tasks do not block; promoting them requires reviewed scope amendment. A late amendment invalidates a prior completion snapshot.
+- [x] Run `uv run pytest tests/test_scope.py -q`; confirm failure.
+- [x] Implement scope proposals and approvals against active identities, version checks and transactional dependency changes. Bind review and completion to exact versions.
+- [x] Rerun scope/ledger tests successfully and commit.
 
 ### Task 4: Peer membership and retirement
 
@@ -77,10 +81,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `HelperProposal(requester, capability, task_ids, model_key, budget_usd, evidence)`; `Membership.propose(proposal) -> str`; `.review(proposal_id: str, reviewer: str, approve: bool) -> MembershipDecision`; `.retire(peer_id: str, reason: str) -> None`. Profiles expose allowlisted model key, family and capabilities.
 
-- [ ] Test three bootstrap peers spanning two families; self-approval, unknown capabilities/models, duplicate helpers and unfunded proposals fail; five active/eight lifetime bounds hold under concurrent admission. Retirement cannot strand required reviews or bootstrap held work; helper retirement releases leases without reusing identities or resetting spend.
-- [ ] Run `uv run pytest tests/test_membership.py -q`; confirm failure.
-- [ ] Implement deterministic admission after independent usefulness review; store reasons, task links, evidence, requested budget and profile. Requested budget is a constraint within shared funds, not newly created money. Reject unavailable review capacity and emit actual lifecycle events.
-- [ ] Rerun membership tests successfully and commit.
+- [x] Test three bootstrap peers spanning two families; self-approval, unknown capabilities/models, duplicate helpers and unfunded proposals fail; five active/eight lifetime bounds hold under concurrent admission. Retirement cannot strand required reviews or bootstrap held work; helper retirement releases leases without reusing identities or resetting spend.
+- [x] Run `uv run pytest tests/test_membership.py -q`; confirm failure.
+- [x] Implement deterministic admission after independent usefulness review; store reasons, task links, evidence, requested budget and profile. Requested budget is a constraint within shared funds, not newly created money. Reject unavailable review capacity and emit actual lifecycle events.
+- [x] Rerun membership tests successfully and commit.
 
 ### Task 5: Model gateway, accounting, execution slots
 
@@ -88,11 +92,11 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `Model.complete(request: ModelRequest) -> ModelResponse` async; response has content, input/output usage and request ID. `Gateway.call(request, purpose, execution) -> ModelResponse`; `ExecutionSlots.enter(kind, identity)` async context manager; `execution.yield_to_child()` async context manager. Money uses integer microdollars and conservative rounding. Scripted pricing is explicitly synthetic.
 
-- [ ] Test concurrent reservations never exceed USD 1.00; exploration stops at USD 0.80 while review can use the remaining USD 0.20; calls beyond 40 fail. Unknown pricing, missing/invalid usage and oversized prompts fail visibly. Cancellation after submission retains unresolved reservation; reconciliation is idempotent.
-- [ ] Test five-slot peak across peers/leaves, waiting parents yield, nested leaves cannot recurse, and cancellation during slot handoff leaks no permits or identities.
-- [ ] Run `uv run pytest tests/test_budget.py tests/test_slots.py tests/test_models.py -q`; confirm failures.
-- [ ] Implement one gateway for every model dispatch, reserving bounded prompt plus maximum output before submission, then settling reported usage. Usage exceeding reservation is recorded as accounting failure, never clipped. Persist call lifecycle and settled/unresolved amounts. Membership admission consults current funds and context availability from this task.
-- [ ] Rerun tests successfully and commit.
+- [x] Test concurrent reservations never exceed USD 1.00; exploration stops at USD 0.80 while review can use the remaining USD 0.20; calls beyond 40 fail. Unknown pricing, missing/invalid usage and oversized prompts fail visibly. Cancellation after submission retains unresolved reservation; reconciliation is idempotent.
+- [x] Test five-slot peak across peers/leaves, waiting parents yield, nested leaves cannot recurse, and cancellation during slot handoff leaks no permits or identities.
+- [x] Run `uv run pytest tests/test_budget.py tests/test_slots.py tests/test_models.py -q`; confirm failures.
+- [x] Implement one gateway for every model dispatch, reserving bounded prompt plus maximum output before submission, then settling reported usage. Usage exceeding reservation is recorded as accounting failure, never clipped. Persist call lifecycle and settled/unresolved amounts. Membership admission consults current funds and context availability from this task.
+- [x] Rerun tests successfully and commit.
 
 ### Task 6: External context and validated peer actions
 
@@ -100,10 +104,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `ContextStore.put(value, evidence) -> ContextHandle`; `.preview(handle, max_chars: int) -> Preview`; `.slice(handle, start, length) -> ContextHandle`. `Peer.step(snapshot: PeerSnapshot) -> StepResult` async. Typed actions cover proposing/claiming tasks, publishing findings/artifacts, independent reviews, scope/membership proposals/reviews, context operations and retirement. Runtime validates actor authority on every action.
 
-- [ ] Test external handles retain full values while previews truncate with explicit references; citations survive slicing and assembly. Malformed actions, invented handles, self-approval, injected evidence instructions and oversized outputs cannot mutate authority. Model errors produce bounded repair feedback, at most two repairs per task.
-- [ ] Run `uv run pytest tests/test_context.py tests/test_peer.py -q`; confirm failure.
-- [ ] Implement the peer loop reading brief, rubric, metadata and ledger state. Models propose work and select claims; scheduling never chooses business strategy. Publish shared findings promptly. Use gateway for planning and review. Define `ContextExecutor.execute(code: str, handles: list[ContextHandle], execution) -> ExecutionResult` as an injected async protocol; scripted tests use a named fake until Task 8 supplies isolation.
-- [ ] Rerun tests successfully and commit.
+- [x] Test external handles retain full values while previews truncate with explicit references; citations survive slicing and assembly. Malformed actions, invented handles, self-approval, injected evidence instructions and oversized outputs cannot mutate authority. Model errors produce bounded repair feedback, at most two repairs per task.
+- [x] Run `uv run pytest tests/test_context.py tests/test_peer.py -q`; confirm failure.
+- [x] Implement the peer loop reading brief, rubric, metadata and ledger state. Models propose work and select claims; scheduling never chooses business strategy. Publish shared findings promptly. Use gateway for planning and review. Define `ContextExecutor.execute(code: str, handles: list[ContextHandle], execution) -> ExecutionResult` as an injected async protocol; scripted tests use a named fake until Task 8 supplies isolation.
+- [x] Rerun tests successfully and commit.
 
 ### Task 7: Offline runtime, independent outcome checks, trace export
 
@@ -111,11 +115,11 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `Runtime.run(mission: Mission) -> RunResult` async; `.cancel() -> None`; `OutcomeChecker.check(snapshot: CompletionSnapshot) -> OutcomeDecision`; `export_run(ledger: Ledger, destination: Path) -> Path`. Commands: `agora-v2 replay --out PATH`, `agora-v2 inspect PATH`.
 
-- [ ] Write end-to-end scripted test with three peers, evidence discovery, peer-proposed helper, independent admission/review, actual claims/artifacts, helper retirement and a cited memo. Assert events come from ledger mutations, not UI animation. Assert summary fields use v1 semantics without giving gold to peers.
-- [ ] Parameterize all seven terminal outcomes, in-flight cancellation, lease expiry, no-progress stall, scope amendment during outcome checking and unavailable evidence. Require no held leases/slots or local resources at termination; unresolved billing remains disclosed.
-- [ ] Run `uv run pytest tests/test_runtime.py tests/test_outcome.py tests/test_offline_demo.py -q`; confirm failure.
-- [ ] Implement fair mechanical episode scheduling, deadline enforcement, drain/cancel/cleanup and immutable trace exports with configuration, hashes, scope versions and artifacts. Completion requires accepted scope, reviewed required versions, deterministic citation/summary checks and independent rubric coverage check against original brief. Gold correctness belongs only to evaluation. Stop admission/claims before draining; record teardown failures truthfully.
-- [ ] Run tests and `uv run agora-v2 replay --out /tmp/agora-v2-demo`; verify labeled scripted output and inspect export. Commit. This is the first runnable offline slice.
+- [x] Write end-to-end scripted test with three peers, evidence discovery, peer-proposed helper, independent admission/review, actual claims/artifacts, helper retirement and a cited memo. Assert events come from ledger mutations, not UI animation. Assert summary fields use v1 semantics without giving gold to peers.
+- [x] Parameterize all seven terminal outcomes, in-flight cancellation, lease expiry, no-progress stall, scope amendment during outcome checking and unavailable evidence. Require no held leases/slots or local resources at termination; unresolved billing remains disclosed.
+- [x] Run `uv run pytest tests/test_runtime.py tests/test_outcome.py tests/test_offline_demo.py -q`; confirm failure.
+- [x] Implement fair mechanical episode scheduling, deadline enforcement, drain/cancel/cleanup and immutable trace exports with configuration, hashes, scope versions and artifacts. Completion requires accepted scope, reviewed required versions, deterministic citation/summary checks and independent rubric coverage check against original brief. Gold correctness belongs only to evaluation. Stop admission/claims before draining; record teardown failures truthfully.
+- [x] Run tests and `uv run agora-v2 replay --out /tmp/agora-v2-demo`; verify labeled scripted output and inspect export. Commit. This is the first runnable offline slice.
 
 ### Task 8: Real isolated RLM execution and author-package assessment
 
@@ -147,10 +151,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `agora-v2 observe RUN_PATH --port 8765`; GET-only `/api/snapshot` and `/api/events?after=SEQ`; same schema for active ledger and exported replay.
 
-- [ ] Test mutation requests fail, cursors preserve event order, peer states and membership reasons match ledger, semantic nodes have no voting/claim controls, and scripted labeling persists throughout playback. Treat artifact/evidence text as untrusted; render as text and reject path traversal.
-- [ ] Run `uv run pytest tests/test_observer.py -q`; confirm failure.
-- [ ] Implement local read-only observer showing joining/ready/working/waiting/reviewing/draining/retired/failed states, task claims, findings, proposal decisions, scope, calls, settled/unresolved cost and final artifacts. Replay consumes captured real events with playback controls; live view adds no synthetic transitions.
-- [ ] Rerun tests and inspect browser at desktop/mobile sizes using scripted run, including retired helper and final memo. Commit.
+- [x] Test mutation requests fail, cursors preserve event order, peer states and membership reasons match ledger, semantic nodes have no voting/claim controls, and scripted labeling persists throughout playback. Treat artifact/evidence text as untrusted; render as text and reject path traversal.
+- [x] Run `uv run pytest tests/test_observer.py -q`; confirm failure.
+- [x] Implement local read-only observer showing joining/ready/working/waiting/reviewing/draining/retired/failed states, task claims, findings, proposal decisions, scope, calls, settled/unresolved cost and final artifacts. Replay consumes captured real events with playback controls; live view adds no synthetic transitions.
+- [x] Rerun tests and inspect browser at desktop/mobile sizes using scripted run, including retired helper and final memo. Commit.
 
 ### Task 11: Comparable evaluation arms and final acceptance
 

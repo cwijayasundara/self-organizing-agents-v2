@@ -12,7 +12,7 @@ FIELDS={
     'review_scope':{'proposal_id','approve','reason'}, 'propose_helper':{'capability','task_ids','model_key','budget_micro','evidence','reason'},
     'review_helper':{'proposal_id','approve'}, 'retire':{'reason'}, 'finding':{'content','evidence'},
     'read_evidence':{'ref','start','length'}, 'preview':{'handle','max_chars'}, 'slice':{'handle','start','length'},
-    'execute':{'code','handles'},
+    'execute':{'code','handles'}, 'read_artifact':{'artifact_id'},
 }
 
 
@@ -52,7 +52,13 @@ class ActionDispatcher:
                 evidence=list(set(evidence)|set(stored_refs))
             refs=self.references(evidence)
             result=l.publish(Claim(row['id'],actor,row['token'],row['expires']),content,refs)
-            return asdict(result)
+            return {'id':result.id,'task_id':result.task_id,'author':result.author,'version':result.version,'content_preview':result.content[:1000],'content_truncated':len(result.content)>1000}
+        if kind=='read_artifact':
+            row=l.db.execute('SELECT content,evidence FROM artifacts WHERE id=?',(a['artifact_id'],)).fetchone()
+            if row is None:
+                raise ValueError('unknown artifact')
+            h=self.context.put(row['content'],tuple(json.loads(row['evidence'])))
+            return {'handle':h,'preview':asdict(self.context.preview(h,1000))}
         if kind=='review_artifact':
             l.review_artifact(a['artifact_id'],actor,a['approve'],a['reason'])
             return {'reviewed':a['artifact_id']}

@@ -47,3 +47,33 @@ async def test_global_context_peak():
             await asyncio.sleep(.001)
     await asyncio.gather(*(work(i) for i in range(20)))
     assert slots.peak==5 and slots.active==0
+
+
+async def test_cancellation_in_child_does_not_wait_for_unrelated_slot():
+    slots=ExecutionSlots(1)
+    occupied=asyncio.Event()
+    release=asyncio.Event()
+    unrelated_task=None
+    async def unrelated():
+        async with slots.enter('peer','other'):
+            occupied.set()
+            await release.wait()
+    async def parent():
+        nonlocal unrelated_task
+        async with slots.enter('peer','parent') as ex:
+            async with ex.yield_to_child():
+                unrelated_task=asyncio.create_task(unrelated())
+                await occupied.wait()
+                raise asyncio.CancelledError()
+    task=asyncio.create_task(parent())
+    try:
+        await occupied.wait()
+        done,_=await asyncio.wait({task},timeout=.05)
+        assert task in done, 'cancelled parent waits to reacquire an unrelated slot'
+        assert task.cancelled()
+    finally:
+        release.set()
+        await asyncio.gather(task,return_exceptions=True)
+        if unrelated_task:
+            await unrelated_task
+    assert slots.active==0

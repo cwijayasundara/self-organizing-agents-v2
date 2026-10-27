@@ -22,7 +22,7 @@ class Artifacts:
             self.check_claim(claim)
             version = self.db.execute('SELECT COALESCE(MAX(version),0)+1 FROM artifacts WHERE task=?', (claim.task_id,)).fetchone()[0]
             result = Artifact(uuid.uuid4().hex, claim.task_id, claim.peer_id, content, version)
-            self.db.execute('INSERT INTO artifacts(id,task,author,content,evidence,version) VALUES(?,?,?,?,?,?)', (result.id, claim.task_id, claim.peer_id, content, json.dumps(evidence), version))
+            self.db.execute('INSERT INTO artifacts(id,task,author,content,evidence,version,scope_version) VALUES(?,?,?,?,?,?,?)', (result.id, claim.task_id, claim.peer_id, content, json.dumps(evidence), version, self.scope_version))
             self.db.execute("UPDATE tasks SET state='published',holder=NULL,token=NULL,expires=NULL WHERE id=?", (claim.task_id,))
             self.event(claim.peer_id, 'artifact_published', {'artifact_id': result.id, 'task_id': claim.task_id, 'version': version, 'evidence': evidence})
             return result
@@ -35,6 +35,9 @@ class Artifacts:
             row = self.db.execute('SELECT * FROM artifacts WHERE id=?', (artifact_id,)).fetchone()
             if row is None or row['author'] == reviewer:
                 raise ValueError('independent review required')
+            task = self.db.execute('SELECT state,final FROM tasks WHERE id=?', (row['task'],)).fetchone()
+            if task['state'] != 'published' or (task['final'] and row['scope_version'] != self.scope_version):
+                raise ValueError('stale or no longer published artifact')
             latest = self.db.execute('SELECT MAX(version) FROM artifacts WHERE task=?', (row['task'],)).fetchone()[0]
             if latest != row['version']:
                 raise ValueError('stale artifact review')

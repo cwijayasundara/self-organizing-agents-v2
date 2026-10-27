@@ -17,3 +17,17 @@ def test_external_context_bounds_and_citation_preservation(tmp_path):
         store.preview(handle,10001)
     with pytest.raises(ValueError):
         store.slice(handle,-1,2)
+
+
+def test_peer_snapshot_contains_bounded_artifact_preview(tmp_path):
+    from agora_v2.ledger import Ledger,TaskSpec
+    from agora_v2.trace import peer_snapshot
+    with Ledger(tmp_path/'db') as l:
+        l.register_peer('p','family')
+        t=l.propose_task(TaskSpec('large','analyze',{},(),('review',)))
+        artifact=l.publish(l.claim(t.id,'p',30).claim,'x'*20000,[])
+        data=peer_snapshot(l)
+        record=data['artifacts'][0]
+        assert record['id']==artifact.id
+        assert len(record['content'])<=1000
+        assert record['content_truncated'] is True

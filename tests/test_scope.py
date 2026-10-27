@@ -50,3 +50,22 @@ def test_rejected_critical_scope_cannot_disappear(tmp_path):
         assert not ledger.unresolved_scope()
         with pytest.raises(ValueError):
             ledger.propose_scope('a', [required.id], 0)
+
+
+def test_scope_amendment_cannot_reapprove_final_from_previous_version(tmp_path):
+    with Ledger(tmp_path/'db') as ledger:
+        for p in ['a','b','c']:
+            ledger.register_peer(p,p)
+        final=ledger.propose_task(spec('final',True))
+        task=ledger.propose_task(spec('cost'))
+        proposal=ledger.propose_scope('a',[task.id],0)
+        ledger.review_scope(proposal,'b',True,'approved')
+        artifact=ledger.publish(ledger.claim(task.id,'a',30).claim,'cost',[])
+        ledger.review_artifact(artifact.id,'b',True,'checked')
+        old=ledger.publish(ledger.claim(final.id,'a',30).claim,'old memo',[])
+        ledger.review_artifact(old.id,'b',True,'checked')
+        change=ledger.propose_scope('b',[task.id],1)
+        ledger.review_scope(change,'c',True,'new critical scope revision')
+        with pytest.raises(ValueError,match='stale|published'):
+            ledger.review_artifact(old.id,'c',True,'reapprove old')
+        assert ledger.completion_snapshot() is None

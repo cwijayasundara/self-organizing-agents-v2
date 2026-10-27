@@ -18,6 +18,9 @@ class Ledger(Tasks, Artifacts, Scope):
         self.db.row_factory = sqlite3.Row
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.executescript(SCHEMA)
+        if 'scope_version' not in {r[1] for r in self.db.execute('PRAGMA table_info(artifacts)')}:
+            self.db.execute('ALTER TABLE artifacts ADD COLUMN scope_version INTEGER NOT NULL DEFAULT 0')
+        self.db.execute("UPDATE meta SET value='2' WHERE key='schema_version'")
 
     @contextmanager
     def transaction(self):

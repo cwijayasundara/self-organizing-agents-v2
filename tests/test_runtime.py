@@ -31,3 +31,35 @@ async def test_terminal_paths_preserve_trace_and_release_resources(tmp_path,stat
     assert not runtime.ledger.db.execute('SELECT 1 FROM tasks WHERE holder IS NOT NULL').fetchone()
     assert (tmp_path/'run'/'trace.json').exists()
     runtime.ledger.close()
+
+
+async def test_waiting_peers_stall_without_burning_all_calls(tmp_path):
+    from agora_v2.models import ScriptedModel
+    runtime=build_runtime(tmp_path/'run')
+    runtime.schedule=None
+    wait=ModelResponse('{"type":"wait"}',10,10,'wait')
+    runtime.gateway.models['one']=ScriptedModel([wait]*40)
+    runtime.gateway.models['two']=ScriptedModel([wait]*40)
+    result=await runtime.run(runtime.mission)
+    assert result.status=='stalled'
+    assert runtime.budget.totals()['calls']<=6
+    runtime.ledger.close()
+
+
+async def test_active_cancel_preserves_submitted_liability_and_trace(tmp_path):
+    runtime=build_runtime(tmp_path/'run')
+    started=asyncio.Event()
+    class Hanging:
+        async def complete(self,request):
+            started.set()
+            await asyncio.Event().wait()
+    runtime.gateway.models['one']=Hanging()
+    work=asyncio.create_task(runtime.run(runtime.mission))
+    await asyncio.wait_for(started.wait(),2)
+    runtime.cancel()
+    result=await asyncio.wait_for(work,2)
+    assert result.status=='cancelled'
+    assert runtime.slots.active==0
+    assert runtime.budget.totals()['unresolved_micro']>0
+    assert (tmp_path/'run/trace.json').exists()
+    runtime.ledger.close()

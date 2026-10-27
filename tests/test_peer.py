@@ -62,3 +62,20 @@ async def test_repair_limit_fails_peer_instead_of_looping_forever(tmp_path):
             await peer.step({},ex)
     assert l.db.execute("SELECT state FROM peers WHERE id='p1'").fetchone()[0]=='failed'
     l.close()
+
+
+async def test_review_dispatch_uses_protected_allowance(tmp_path):
+    from agora_v2.ledger import TaskSpec
+    l,d,peer,slots=components(tmp_path,[])
+    task=l.propose_task(TaskSpec('cost','compute',{},(),('checked',)))
+    artifact=l.publish(l.claim(task.id,'p2',30).claim,'checked',[])
+    peer.gateway.models['one']=ScriptedModel([response({'type':'review_artifact','artifact_id':artifact.id,'approve':True,'reason':'verified'})])
+    b=peer.gateway.budget
+    ident=b.reserve('p2','exploration',800000)
+    b.settle(ident,800000,{})
+    from agora_v2.trace import snapshot
+    async with slots.enter('peer','p1') as ex:
+        await peer.step(snapshot(l),ex)
+    assert l.db.execute('SELECT approved FROM artifacts WHERE id=?',(artifact.id,)).fetchone()[0]==1
+    assert l.db.execute('SELECT purpose FROM calls ORDER BY rowid DESC LIMIT 1').fetchone()[0]=='review'
+    l.close()

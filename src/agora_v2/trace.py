@@ -20,3 +20,13 @@ def export_run(runtime, result):
     tmp.write_text(json.dumps(data,indent=2,allow_nan=False)+'\n')
     tmp.replace(path)
     return path
+
+
+def peer_snapshot(ledger):
+    """Artifact bodies stay external; peers receive IDs and bounded previews."""
+    data=snapshot(ledger)
+    for artifact in data['artifacts']:
+        body=artifact['content']
+        artifact['content']=body[:1000]
+        artifact['content_truncated']=len(body)>1000
+    return data
