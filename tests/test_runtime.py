@@ -63,3 +63,25 @@ async def test_active_cancel_preserves_submitted_liability_and_trace(tmp_path):
     assert runtime.budget.totals()['unresolved_micro']>0
     assert (tmp_path/'run/trace.json').exists()
     runtime.ledger.close()
+
+
+@pytest.mark.parametrize('repairs,expected',[(0,'stalled'),(3,'failed')])
+async def test_failed_holder_releases_work_without_resetting_task_repairs(tmp_path,repairs,expected):
+    from agora_v2.ledger import TaskSpec
+    from agora_v2.models import ScriptedModel
+    runtime=build_runtime(tmp_path/'run')
+    task=runtime.ledger.propose_task(TaskSpec('recovery','analyze',{},(),('checked',)))
+    p=runtime.ledger.propose_scope('p2',[task.id],0)
+    runtime.ledger.review_scope(p,'p3',True,'required')
+    runtime.ledger.claim(task.id,'p1',480)
+    runtime.ledger.db.execute("UPDATE tasks SET repairs=? WHERE id=?",(repairs,task.id))
+    runtime.ledger.db.execute("UPDATE peers SET state='failed' WHERE id='p1'")
+    runtime.schedule=['p2']
+    runtime.gateway.models['two']=ScriptedModel([ModelResponse('{"type":"wait"}',10,10,'wait')])
+    result=await runtime.run(runtime.mission)
+    assert result.status==expected
+    assert any(e['type']=='claim_released' and e['payload'].get('reason')=='peer failure' for e in runtime.ledger.events())
+    if repairs:
+        row=runtime.ledger.db.execute('SELECT state,repairs FROM tasks WHERE id=?',(task.id,)).fetchone()
+        assert row['state']=='failed' and row['repairs']==3
+    runtime.ledger.close()

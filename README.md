@@ -1,6 +1,8 @@
 # Agora v2
 
-An independent Python 3.12 experiment in bounded peer coordination and external context processing. The runnable first slice is an explicitly **scripted offline demo**, backed by real SQLite claims, independent reviews, helper admission/retirement, cost reservations and trace export. Real Docker tests separately verify generated Python using external context and a programmatic fake-model subcall.
+A bounded dynamic peer swarm with independently reviewed work, temporary helpers and the authors' RLM engine in isolated containers. Supports direct GLM/DeepSeek APIs, a live browser observer, deterministic scripted replay and executable architecture comparisons. V1's source is preserved.
+
+Offline demo, no keys:
 
 ```sh
 uv sync
@@ -8,24 +10,41 @@ uv run agora-v2 replay --out runs/demo
 uv run agora-v2 observe runs/demo --port 8765
 ```
 
-Open http://127.0.0.1:8765 for read-only timeline playback, peer states, shared tasks and the cited final memo. Choose a fresh output directory for each run. `uv run agora-v2 inspect runs/demo` prints the trace. The replay uses synthetic model usage and pricing, requires no keys, and makes no provider requests.
+Open http://127.0.0.1:8765 and use Play events to watch actual ledger transitions. Scripted replay is explicitly labeled; fake-provider verification runs are labeled separately from live runs. The observer shows peers, helper reasons, claims/reviews, semantic calls, costs and the final memo, with no mutation controls.
+
+Provision the pinned author engine and configure local keys:
+
+```sh
+docker build -f sandbox/Dockerfile -t agora-v2-rlms:d04208afbad2 .
+cp .env.example .env.local
+# Fill GLM_API_KEY and DEEPSEEK_API_KEY in .env.local locally.
+uv run --env-file .env.local agora-v2 smoke --models examples/models.example.json \
+  --budget-usd 0.10 --out runs/smoke
+uv run --env-file .env.local agora-v2 run --mission examples/evidence_review/mission.json \
+  --models examples/models.example.json --budget-usd 1.00 --out runs/live-demo --watch --port 8766
+```
+
+Keys remain in the host environment and are never mounted into generated-code execution or forwarded to v1. Environment files are ignored by Git. Live commands require an explicit spend cap and fresh output directory. `--watch` keeps the read-only observer available after the run until Ctrl-C. The examples do not authorize paid execution by themselves.
+
+Compare frozen v1, a plain single agent, external context without semantic calls, the dynamic RLM swarm and a single-root RLM:
+
+```sh
+uv run --env-file .env.local agora-v2 evaluate --config examples/comparison.example.json \
+  --budget-usd 5.00 --out runs/comparison
+```
+
+This cap covers all arms and seeds in that command, including independent final judging. Reports disclose enforcement differences and do not invent missing results. See [comparison details](docs/evaluation.md).
+
+Verification:
 
 ```sh
 uv run pytest -q
-# Explicitly provision a container image; the executor never pulls automatically.
-docker pull python:3.12-slim
-uv run pytest tests/test_sandbox.py -m sandbox -q
+uv run pytest -m 'sandbox or v1' -q
 uv build
 ```
 
-Offline tests include an ephemeral localhost observer server. Sandbox tests additionally require Docker. The observer is bound to loopback and exposes GET-only snapshots/events, with no run controls. An optional Node-based regression checks browser replay artifact-version selection.
+The second suite requires the built Docker image and, for the optional frozen-v1 test, the existing sibling v1 checkout/interpreter. No credentials are needed for either suite. Current verification: 74 offline tests and 14 container/v1 integration tests passed. Paid verification awaits the user's keys and cap.
 
-The default limits are USD 1.00, 480 seconds, 40 total model calls, three bootstrap peers across two model families, five execution contexts, eight lifetime identities, leaf recursion depth one and at most two task repair attempts. Twenty percent of the model budget is protected for review/finalization. Review and finalization phases restrict available actions to match those funds. Unknown usage retains unresolved billing liability. Peer and leaf calls share the same slot pool; waiting parents yield slots.
+Default policy: USD 1.00; 480 seconds; 40 global model calls; three bootstrap peers spanning two families; five execution contexts; eight lifetime identities; semantic leaf depth one; two task repairs. Twenty percent of the total budget is protected for review/finalization. Submitted cancellations retain unresolved liability. Costs use reported token/cache usage and verified tariffs; DeepSeek peak rates are conservative upper estimates, not reconciled invoices.
 
-The four-day-week fixture is copied from frozen v1 with source revision and hashes. Gold is held separately under `eval/gold/` for export scoring and never included in peer context, sandbox capabilities or the wheel's demo fixture. V2 does not import or modify v1.
-
-**Live mode is not ready.** The authors' RLM package has not passed the required adapter controls. `agora-v2 run` requires an explicit spend cap and refuses dispatch while this gate remains closed; it does not substitute a different live mechanism. No paid smoke or architecture comparison has run. See [adapter assessment](docs/rlm-adapter-assessment.md), [live status](docs/live-mode.md), and [evaluation/export contract](docs/evaluation.md).
-
-The browser observer and export scoring are usable independently. Export scoring supports the five architecture labels but does not yet execute provider-backed comparison arms. Missing arms and unmeasured claim judgments remain explicit.
-
-The [design](docs/superpowers/specs/2026-10-27-dynamic-swarm-design.md) and [implementation plan](docs/superpowers/plans/2026-10-27-dynamic-swarm.md) record the intended complete milestone; remaining live work is not claimed complete by this slice.
+The business fixture includes provenance and evidence hashes. Gold is evaluator-only, outside peer/interpreter capabilities and absent from the wheel fixture. See [live setup](docs/live-mode.md), [author integration assessment](docs/rlm-adapter-assessment.md), [implementation status](docs/implementation-status.md), and the [approved design](docs/superpowers/specs/2026-10-27-dynamic-swarm-design.md).

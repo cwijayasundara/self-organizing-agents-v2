@@ -60,6 +60,10 @@ class Budget:
 
     def unresolved(self, ident, reason):
         with self.ledger.transaction():
+            row=self.ledger.db.execute('SELECT settled FROM calls WHERE id=?',(ident,)).fetchone()
+            if row is not None and row['settled'] is not None:
+                self.ledger.event('gateway','call_failed_after_settlement',{'call_id':ident,'reason':reason})
+                return
             self.ledger.db.execute("UPDATE calls SET state='unresolved' WHERE id=? AND settled IS NULL", (ident,))
             self.ledger.event('gateway','call_unresolved',{'call_id':ident,'reason':reason})
 

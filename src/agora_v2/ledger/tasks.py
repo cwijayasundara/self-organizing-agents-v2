@@ -71,7 +71,7 @@ class Tasks:
             row = self.db.execute('SELECT * FROM tasks WHERE id=?', (task_id,)).fetchone()
             if row is None:
                 raise ValueError('unknown task')
-            if row['state'] in ('published', 'approved'):
+            if row['state'] in ('published', 'approved', 'failed'):
                 return ClaimResult(False, reason='task already published')
             if row['holder'] and row['expires'] > self.clock():
                 return ClaimResult(False, reason='contended', holder=row['holder'], expires_at=row['expires'])

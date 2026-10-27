@@ -4,8 +4,9 @@ from ..models import ModelRequest
 
 
 class SemanticBridge:
-    def __init__(self, store, gateway, slots, handles):
+    def __init__(self, store, gateway, slots, handles,allow_semantic=True):
         self.store,self.gateway,self.slots=store,gateway,slots
+        self.allow_semantic=allow_semantic
         self.allowed=set(handles)
         for h in handles:
             store.get(h)
@@ -33,6 +34,8 @@ class SemanticBridge:
             self.allowed.add(h)
             return {'handle':h,'preview':asdict(self.store.preview(h,1000))}
         if op=='semantic_call':
+            if not self.allow_semantic:
+                raise ValueError('semantic subcalls disabled for this architecture')
             if execution.kind!='peer' or not execution.held:
                 raise ValueError('semantic depth limit')
             selected=message['handles']

@@ -15,10 +15,11 @@ class RunResult:
 
 
 class Runtime:
-    def __init__(self, mission,ledger,membership,gateway,budget,slots,dispatcher,output,mode='live',schedule=None):
+    def __init__(self, mission,ledger,membership,gateway,budget,slots,dispatcher,output,mode='live',schedule=None,reasoner=None):
         self.mission,self.ledger,self.membership,self.gateway,self.budget,self.slots,self.dispatcher,self.output,self.mode=mission,ledger,membership,gateway,budget,slots,dispatcher,output,mode
         self.context,self.evidence=dispatcher.context,dispatcher.evidence
         self.schedule=schedule
+        self.reasoner=reasoner
         self.ledger.db.execute("INSERT OR REPLACE INTO meta VALUES('mode',?)",(mode,))
         self.cancelled=asyncio.Event()
         self.peers={}
@@ -37,8 +38,21 @@ class Runtime:
             waiting_steps=0
             while not self.cancelled.is_set():
                 self.evidence.metadata()  # Hash validation also catches changed/unavailable evidence.
+                with self.ledger.transaction():
+                    failed_work=self.ledger.db.execute("SELECT t.id,t.holder,t.repairs FROM tasks t JOIN peers p ON p.id=t.holder WHERE p.state='failed'").fetchall()
+                    for task in failed_work:
+                        state='failed' if task['repairs']>mission.limits.repair_attempts else 'open'
+                        self.ledger.db.execute('UPDATE tasks SET state=?,holder=NULL,token=NULL,expires=NULL WHERE id=?',(state,task['id']))
+                        self.ledger.event(task['holder'],'claim_released',{'task_id':task['id'],'reason':'peer failure'})
+                    critical_failure=self.ledger.db.execute("WITH RECURSIVE required(id) AS (SELECT id FROM tasks WHERE final=1 UNION SELECT dependency FROM dependencies JOIN required ON task=required.id) SELECT 1 FROM tasks JOIN required ON tasks.id=required.id WHERE tasks.state='failed'").fetchone()
+                if critical_failure:
+                    status='failed'
+                    issues.append('required task exhausted its repair allowance')
+                    return
                 active=[dict(r) for r in self.ledger.db.execute("SELECT * FROM peers WHERE state NOT IN ('retired','failed','draining') ORDER BY id")]
                 if not active:
+                    status='failed'
+                    issues.append('no active peers remain')
                     return
                 if self.schedule is not None:
                     if scripted_index>=len(self.schedule):
@@ -53,11 +67,12 @@ class Runtime:
                     round_index+=1
                 ident=selected['id']
                 if ident not in self.peers:
-                    self.peers[ident]=Peer(ident,selected['model_key'],mission,self.gateway,self.dispatcher)
+                    self.peers[ident]=Peer(ident,selected['model_key'],mission,self.gateway,self.dispatcher,reasoner=self.reasoner)
                 self.ledger.expire_claims(self.ledger.clock())
                 view=peer_snapshot(self.ledger)
                 view['scope_version']=self.ledger.scope_version
                 view['identity']=ident
+                view['run_seed']=getattr(self,'model_config',{}).get('seed',0)
                 view['events']=self.ledger.events()[-25:]
                 for event in view['events']:
                     for key in ('content','reason'):

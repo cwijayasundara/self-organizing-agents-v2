@@ -17,7 +17,8 @@ FIELDS={
 
 
 class ActionDispatcher:
-    def __init__(self, ledger, membership, evidence, context, executor=None):
+    def __init__(self, ledger, membership, evidence, context, executor=None,lease_seconds=30):
+        self.lease_seconds=lease_seconds
         self.ledger,self.membership,self.evidence,self.context,self.executor=ledger,membership,evidence,context,executor
 
     def references(self, refs):
@@ -40,7 +41,7 @@ class ActionDispatcher:
             refs=self.references(a.get('evidence',[]))
             return asdict(l.propose_task(TaskSpec(a['key'],a['objective'],a['schema'],tuple(refs),tuple(a['criteria']),tuple(a.get('dependencies',[])))))
         if kind=='claim':
-            return asdict(l.claim(a['task_id'],actor,30))
+            return asdict(l.claim(a['task_id'],actor,self.lease_seconds))
         if kind=='publish':
             row=l.db.execute('SELECT * FROM tasks WHERE id=?',(a['task_id'],)).fetchone()
             if row is None or row['holder']!=actor:

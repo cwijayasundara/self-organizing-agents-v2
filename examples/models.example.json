@@ -1,5 +1,26 @@
 {
-  "note": "Template only. Populate verified model identifiers, prices, and families after author-adapter integration. This file cannot open the live gate.",
-  "models": {},
-  "bootstrap": []
+  "note": "Official direct APIs; tariffs verified 2026-10-27. DeepSeek peak rates are conservative upper estimates; final provider invoices may be lower off-peak. Keys are environment variables, never literal values.",
+  "models": {
+    "glm": {
+      "provider": "glm",
+      "id": "glm-5.3-flash",
+      "family": "glm",
+      "key_env": "GLM_API_KEY",
+      "input_micro_per_token": 0.15,
+      "cached_input_micro_per_token": 0.03,
+      "output_micro_per_token": 0.5
+    },
+    "deepseek": {
+      "provider": "deepseek",
+      "id": "deepseek-flash",
+      "family": "deepseek",
+      "key_env": "DEEPSEEK_API_KEY",
+      "input_micro_per_token": 0.3,
+      "cached_input_micro_per_token": 0.006,
+      "output_micro_per_token": 1.2
+    }
+  },
+  "bootstrap": ["glm", "deepseek", "glm"],
+  "checker": "deepseek",
+  "leaf": "deepseek"
 }

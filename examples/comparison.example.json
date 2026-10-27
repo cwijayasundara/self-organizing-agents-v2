@@ -1,0 +1,8 @@
+{
+  "mission": "evidence_review/mission.json",
+  "gold": "../eval/gold/evidence_review.json",
+  "models": "models.example.json",
+  "v1_root": "../../self_organizing_agents_v1.0",
+  "execute": ["frozen_v1", "plain_single", "external_context", "dynamic_swarm", "single_root_rlm"],
+  "seeds": [0, 1]
+}

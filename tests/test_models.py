@@ -43,3 +43,16 @@ async def test_submitted_cancel_keeps_liability(tmp_path):
             await t
         assert b.totals()['unresolved_micro']>0
         assert slots.active==0
+
+
+async def test_truncated_response_keeps_reported_cost_settled(tmp_path):
+    with Ledger(tmp_path/'db') as l:
+        budget=Budget(l,Limits())
+        gateway=Gateway({'fake':ScriptedModel([ModelResponse('truncated',3,10,'id',finish_reason='length')])},{'fake':Price(1,1)},budget)
+        slots=ExecutionSlots(1)
+        async with slots.enter('peer','p') as ex:
+            with pytest.raises(AccountingError):
+                await gateway.call(ModelRequest('fake','question',10),'review',ex)
+        assert budget.totals()['settled_micro']==13
+        assert budget.totals()['unresolved_micro']==0
+        assert not any(e['type']=='call_unresolved' for e in l.events())

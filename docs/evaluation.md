@@ -1,11 +1,28 @@
-# Evaluation status and export contract
+# Executable architecture comparisons
 
-`agora-v2 evaluate --config CONFIG --out DIRECTORY` scores existing exports for five named arms: `frozen_v1`, `plain_single`, `external_context`, `dynamic_swarm`, `single_root_rlm`. It does not yet execute those architectures. Missing exports are `not_run`, and a scripted export is labeled mechanics-only regardless of its arm slot.
+`agora-v2 evaluate` supports exports and actual execution of five architectures:
 
-Configuration is JSON with `mission`, `gold`, `seeds: [0]`, and `exports: {"dynamic_swarm": "/path/to/trace.json"}`. Relative paths resolve against the config file. An export describes one recorded run; it cannot be reused to fabricate repeated seeds. Evaluate separate exports for real repeated runs. The evaluator alone receives the gold path; arm inputs contain only brief, rubric, manifest, limits and seed. Gold must remain outside the actual evidence root and must not alias a manifest file.
+- `frozen_v1`: unchanged v1 source in an external process, four fixed peers and its original template; models injected through public `arun_swarm(models=...)`.
+- `plain_single`: one agent with scoped evidence reads and a bounded arithmetic calculator.
+- `external_context`: one agent with external handles and isolated Python; semantic calls are refused by the host bridge.
+- `dynamic_swarm`: self-claiming peers, reviewed scope, bounded helpers and the isolated authors' RLM engine.
+- `single_root_rlm`: one authors' RLM root with external evidence and bounded leaf calls, without peer coordination.
 
-Exports use `format_version: 1`, `status`, `mode`, `final_memo`, `cost: {settled_micro, unresolved_micro, calls}`, `latency_seconds`, `peers`, `events`, `brief`, `rubric`, `limits`, and `evidence_hashes`. V1 can be represented by an exported wrapper of this schema outside its repository. Missing fields and unavoidable enforcement differences must be disclosed; model revisions are optional metadata and absence is retained. No v1 subprocess or model request is invoked by export scoring.
+```sh
+uv run --env-file .env.local agora-v2 evaluate \
+  --config examples/comparison.example.json --budget-usd 5.00 --out runs/comparison
+```
 
-The scorer reports five-field correctness, valid cited-file coverage, output-format/citation errors, reported cost/latency, identity count, membership transitions and recorded execution errors. Coverage counts distinct cited evidence files, not semantic support. Unsupported claims remain `null` because this deterministic scorer does not independently judge every claim. Missing imported accounting stays unknown, never zero. A scripted outcome checker is not a live evidence judge.
+The CLI budget is the TOTAL cap for this comparison command. It is divided equally, rounding down to microdollars, across all requested arms and repetitions. For five arms and seeds `[0,1]`, USD 5 allocates USD 0.50 per run including independent judging. Prior overruns or unresolved liability can prevent later dispatches; exceptions recover accounting from persisted calls. A smoke or standalone demo is a separate command/cap, so allocate any overall verification allowance explicitly between commands.
 
-The first replay fixture scores 5/5 expected business fields, exercising the pipeline. This is not an architectural comparison or evidence of superiority. Provider-backed baseline runners, author-package RLM integration, matched model policies, current price verification, independent claim judging, and repeated live comparisons remain pending.
+Every arm receives the same original brief, rubric, manifest, configured model choices where applicable, per-run cap and deadline. Gold is evaluator-only and never passed to a runner, model or interpreter. Seeds are included as prompt metadata; they do not guarantee provider RNG determinism. Repeated seed labels create separate run directories rather than reusing an export.
+
+Frozen v1 must be the pinned source revision `b2bc646aa51b7444a22670283d462b59b7ddde22`, with no staged or unstaged tracked changes. Its existing interpreter is used without copying its environment or credentials. Only verified manifest files are materialized into a fresh read-only evidence snapshot, excluding nonmanifest files and hidden gold aliases. Its native model requests retain tool schemas, message roles, reported token/cache usage and return through the same host budget. No v1 source is modified. Native scheduling/leases, four initial peers, fixed scope and serialized provider dispatch are recorded enforcement differences.
+
+Each completed candidate passes deterministic memo/citation checks and an independent model judgment against the original rubric and complete evidence within the configured prompt bound. Overlarge judge context fails explicitly rather than silently truncating evidence. Judging is charged inside each arm's budget. The report includes unsupported claims and rubric coverage when the judge returns a valid result; missing/invalid judgments stay unknown.
+
+Outputs: per-run databases/traces/artifacts; `report.json` with raw rows and aggregates; `report.md` with correctness, citation coverage, unsupported claims, settled token-rated estimates, unresolved reservations, calls and latency. Aggregates include run/completion counts, mean correctness, sample deviation and mean latency. Model configuration, evidence hashes, seeds and enforcement differences travel with results.
+
+For existing exports, omit `execute` and supply `exports: {"dynamic_swarm":"/path/to/trace.json"}` with one seed. Exports are not fabricated into repeated runs. Missing arms are `not_run`, unknown imported metrics remain unknown, and fake/scripted results are labeled mechanics-only. No live superiority or invoice accuracy is established by the offline suite.
+
+The default GLM and DeepSeek tariffs were verified from official sources on 2026-10-27. DeepSeek peak rates are conservative upper estimates; actual off-peak invoices can be lower. See `live-mode.md` for source links and credential setup.

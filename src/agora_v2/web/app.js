@@ -13,6 +13,7 @@ function reduce(events){
  case 'task_claimed':if(state.tasks[p.task_id])Object.assign(state.tasks[p.task_id],{state:'claimed by '+e.actor});break;
  case 'claim_released':case 'claim_expired':if(state.tasks[p.task_id])state.tasks[p.task_id].state='open';break;
  case 'artifact_published':if(state.tasks[p.task_id]){state.tasks[p.task_id].state='awaiting independent review';if(state.tasks[p.task_id].final)state.memo_artifact_id=p.artifact_id;}break;
+ case 'final_memo_published':state.memo_artifact_id=p.artifact_id;break;
  case 'artifact_reviewed':{const a=trace.artifacts.find(a=>a.id===p.artifact_id);if(a&&state.tasks[a.task])state.tasks[a.task].state=p.approved?'reviewed':'repair requested';break;}
  case 'scope_reviewed':if(p.approved){state.scope=p.scope_version;for(const t of Object.values(state.tasks))if(t.final)t.state='scope updated; final must be checked';}break;
  case 'semantic_call_started':state.leaves[p.identity]='analyzing supplied evidence';break;
@@ -26,9 +27,9 @@ function describe(e){const p=e.payload;const names={peer_joined:'Joined the ledg
 function render(){
  if(!trace)return;
  const visible=trace.events.slice(0,cursor),s=reduce(visible);
- $('mode').textContent=trace.mode==='scripted'?'SCRIPTED REPLAY · SYNTHETIC USAGE':trace.mode.toUpperCase()+' · READ ONLY';
+ $('mode').textContent=trace.mode==='scripted'?'SCRIPTED REPLAY · SYNTHETIC USAGE':trace.mode==='offline_fake'?'FAKE PROVIDERS · REAL RUNTIME':trace.mode.toUpperCase()+' · READ ONLY';
  $('cursor').max=trace.events.length;$('cursor').value=cursor;$('position').textContent=`${cursor} / ${trace.events.length} events`;
- $('metrics').replaceChildren();for(const [value,label] of [[s.status,'run status'],[Object.keys(s.peers).length,'peer identities'],[s.calls,'model calls'],[`$${(s.settled/1e6).toFixed(6)}`,'settled · '+(trace.mode==='scripted'?'synthetic':'provider')]]){const el=node('div','','metric');el.append(node('strong',value),node('span',label));$('metrics').append(el);}
+ $('metrics').replaceChildren();for(const [value,label] of [[s.status,'run status'],[Object.keys(s.peers).length,'peer identities'],[s.calls,'model calls'],[`$${(s.settled/1e6).toFixed(6)}`,'settled · '+(['scripted','offline_fake'].includes(trace.mode)?'synthetic':'usage estimate')]]){const el=node('div','','metric');el.append(node('strong',value),node('span',label));$('metrics').append(el);}
  $('peers').replaceChildren();for(const [id,p] of Object.entries(s.peers))card($('peers'),id,[p.family,p.state,p.reason],'peer '+p.state);
  $('tasks').replaceChildren();for(const t of Object.values(s.tasks))card($('tasks'),t.key,[t.state],'task');
  $('leaves').replaceChildren();for(const [id,status] of Object.entries(s.leaves))card($('leaves'),id.split(':').slice(0,2).join(' · '),[status,'No task claims or voting authority'],'leaf');if(!Object.keys(s.leaves).length)$('leaves').append(node('p','No semantic calls in the displayed events.','muted'));

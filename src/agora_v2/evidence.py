@@ -41,3 +41,9 @@ class EvidenceStore:
         if type(start) is not int or type(length) is not int or start < 0 or not 0 <= length <= self.MAX_READ:
             raise ValueError('invalid evidence range')
         return self._bytes(ref).decode('utf-8')[start:start + length]
+
+    def read_all(self, ref: str, max_chars: int = 100000) -> str:
+        text = self._bytes(ref).decode('utf-8')
+        if len(text) > max_chars:
+            raise ValueError('complete evidence exceeds configured context bound')
+        return text

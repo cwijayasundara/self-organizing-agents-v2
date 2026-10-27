@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Bounded dynamic peer swarm experiment"
 requires-python = ">=3.12,<3.14"
 readme = "README.md"
-dependencies = []
+dependencies = [
+    "httpx==0.28.1",
+]
 
 [project.scripts]
 agora-v2 = "agora_v2.cli:main"
@@ -21,8 +23,8 @@ dev = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "-m 'not live and not sandbox'"
-markers = ["live: explicit capped provider smoke", "sandbox: real container isolation"]
+addopts = "-m 'not live and not sandbox and not v1'"
+markers = ["live: explicit capped provider smoke", "sandbox: real container isolation", "v1: external frozen v1 integration"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "examples/evidence_review" = "agora_v2/data/evidence_review"

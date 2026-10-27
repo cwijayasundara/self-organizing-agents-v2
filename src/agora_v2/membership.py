@@ -51,7 +51,7 @@ class Membership:
         if type(p.budget_micro) is not int or p.budget_micro <= 0 or p.budget_micro > self.available():
             raise ValueError('helper budget unavailable')
         for ident in p.task_ids:
-            if not l.db.execute("SELECT 1 FROM tasks WHERE id=? AND state!='approved'", (ident,)).fetchone():
+            if not l.db.execute("SELECT 1 FROM tasks WHERE id=? AND state NOT IN ('approved','failed')", (ident,)).fetchone():
                 raise ValueError('helper task unavailable')
         for row in l.db.execute("SELECT proposal,state FROM helper_proposals WHERE state IN ('pending','admitted')"):
             other = json.loads(row['proposal'])

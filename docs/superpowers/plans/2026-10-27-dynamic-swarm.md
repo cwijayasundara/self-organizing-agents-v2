@@ -1,6 +1,6 @@
 # Dynamic Swarm Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver an independent Agora v2 with a truthful offline swarm demo, bounded RLM-equipped peers, opt-in live execution, a read-only observer, and comparable evaluation arms.
 
@@ -12,7 +12,7 @@
 
 ## Execution status — 2026-10-27
 
-Tasks 1–7 and 10 are implemented and verified. Task 8 has a tested project-owned Docker executor and a recorded upstream limit-method probe; a complete author-package adapter remains unverified. Task 9 implements preflight/refusal only, with provider adapters and live smoke pending. Task 11 implements held-out export scoring, with actual baseline/live runners and architectural comparisons pending. See `docs/implementation-status.md` for evidence and limitations. This plan is not complete.
+All implementation tasks are delivered. The authors' RLM engine is pinned and verified in the isolated image; live GLM/DeepSeek adapters, capped smoke/live CLI, five executable comparison arms, independent claim judging and repeated-run reporting are implemented. Verification: 74 offline tests and 14 real container/v1 integration tests passed without keys. The conditional paid smoke and live comparison measurements await user-supplied credentials and an explicit spend cap; they have not been fabricated or marked verified. See `docs/implementation-status.md`.
 
 ## Global Constraints
 
@@ -127,12 +127,12 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** Docker implementation of `ContextExecutor`; sandbox bridge exposes bounded `read_context`, `store`, and async `semantic_call(model_key, context_handles, instruction, max_output_tokens) -> ContextHandle`. Leaves receive no ledger or membership operations and cannot call the bridge recursively.
 
-- [ ] Write real-container tests executing generated Python that selects evidence, computes a value and invokes a scripted model programmatically. Assert full results stay external, citations persist, leaf depth is one, global slots/accounting apply, and missing sandbox causes refusal.
-- [ ] Test no credentials, host files, gold, Docker socket or unrestricted network are exposed; evidence is read-only; scratch is scoped; runaway CPU/output/time and cancelled children are terminated. The controlled host bridge validates every request and never accepts arbitrary host paths or methods.
-- [ ] Run `uv run pytest tests/test_sandbox.py -m sandbox -q`; confirm failures. Keep sandbox marker excluded from default offline suite and report unavailable Docker explicitly.
-- [ ] Implement per-run constrained containers with unprivileged user, read-only root, dropped capabilities, no network, bounded resources/output, evidence-only mount and scratch. Bridge through validated framed stdin/stdout; credentials/providers stay in host gateway. Tear down container and scratch in all exits.
-- [ ] Inspect current official authors' `rlms` API/source through an adapter experiment. Document tested revision, usage reporting, cancellation, recursion, isolation, compatibility and dependency decision. Pin only if controls pass; otherwise explicitly report the integration gap and keep live RLM unavailable pending review rather than substituting silently.
-- [ ] Run bridge and real-sandbox tests successfully, including programmatic semantic subcall; commit assessment and implementation.
+- [x] Write real-container tests executing generated Python that selects evidence, computes a value and invokes a scripted model programmatically. Assert full results stay external, citations persist, leaf depth is one, global slots/accounting apply, and missing sandbox causes refusal.
+- [x] Test no credentials, host files, gold, Docker socket or unrestricted network are exposed; evidence is read-only; scratch is scoped; runaway CPU/output/time and cancelled children are terminated. The controlled host bridge validates every request and never accepts arbitrary host paths or methods.
+- [x] Run `uv run pytest tests/test_sandbox.py -m sandbox -q`; confirm failures. Keep sandbox marker excluded from default offline suite and report unavailable Docker explicitly.
+- [x] Implement per-run constrained containers with unprivileged user, read-only root, dropped capabilities, no network, bounded resources/output, evidence-only mount and scratch. Bridge through validated framed stdin/stdout; credentials/providers stay in host gateway. Tear down container and scratch in all exits.
+- [x] Inspect current official authors' `rlms` API/source through an adapter experiment. Document tested revision, usage reporting, cancellation, recursion, isolation, compatibility and dependency decision. Pin only if controls pass; otherwise explicitly report the integration gap and keep live RLM unavailable pending review rather than substituting silently.
+- [x] Run bridge and real-sandbox tests successfully, including programmatic semantic subcall; commit assessment and implementation.
 
 ### Task 9: Live adapters and opt-in smoke
 
@@ -140,10 +140,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `LiveModel` implements the Task 5 protocol. Command `agora-v2 run --mission PATH --models PATH --budget-usd AMOUNT --out PATH`; explicit `--live` marker for smoke tests.
 
-- [ ] Test omitted cap, missing price/usage, unknown model, one-family bootstrap config, unavailable isolation and failed author-adapter gate all refuse dispatch. Use recorded mock responses for provider parsing, retry liability and streaming/cancellation behavior.
-- [ ] Run `uv run pytest tests/test_live_adapter.py -q`; confirm failure.
-- [ ] Verify identifiers, current official pricing and usage semantics for two selected model families; record verification date/source and lock adapter versions. Secrets come from environment only, never copied from v1 or passed into sandboxes. Route all live operations through gateway; do not invent activity when no helper is proposed.
-- [ ] Rerun offline adapter tests. When live credentials and an explicit cap are supplied, run an opt-in smoke proving reported usage and one bounded semantic subcall. Until then record live verification as pending. Commit.
+- [x] Test omitted cap, missing price/usage, unknown model, one-family bootstrap config, unavailable isolation and failed author-adapter gate all refuse dispatch. Use recorded mock responses for provider parsing, retry liability and streaming/cancellation behavior.
+- [x] Run `uv run pytest tests/test_live_adapter.py -q`; confirm failure.
+- [x] Verify identifiers, current official pricing and usage semantics for two selected model families; record verification date/source and lock adapter versions. Secrets come from environment only, never copied from v1 or passed into sandboxes. Route all live operations through gateway; do not invent activity when no helper is proposed.
+- [x] Rerun offline adapter tests. When live credentials and an explicit cap are supplied, run an opt-in smoke proving reported usage and one bounded semantic subcall. Until then record live verification as pending. Commit.
 
 ### Task 10: Read-only browser observer and truthful replay
 
@@ -162,10 +162,10 @@ Review this plan and select native or subagent execution before implementation, 
 
 **Interfaces:** `Arm.run(input: EvaluationInput) -> ArmResult` async, with brief, evidence manifest, rubric, model keys, limits and seed; gold is excluded. `score(result: ArmResult, gold: Path) -> EvaluationScore`. Command `agora-v2 evaluate --config PATH --out PATH`.
 
-- [ ] Test adapters for frozen v1 export/subprocess, plain single agent with tools, external context without semantic calls, dynamic swarm RLM, and single-root RLM ablation. Spy arms must never receive gold. Require equal configured evidence/rubric/budget/deadline and explicit enforcement-difference metadata.
-- [ ] Run `uv run pytest tests/test_evaluation.py -q`; confirm failure.
-- [ ] Implement evaluator-only five-field correctness, citation resolution/coverage, unsupported-claim review, status, settled/reserved cost, latency, peer/membership/call counts and execution errors. Separate deterministic scores from model-judged metrics and their costs. Record seeds, repetitions, pricing/model revisions and missing metrics; imported v1 results disclose missing controls.
-- [ ] Rerun evaluation tests, `uv run pytest -q`, real-sandbox suite and `uv build`. Re-run scripted CLI plus observer checks; verify no v1 status changes and no runtime imports. Document any unperformed live checks and avoid superiority claims from a single demo. Commit final docs and results.
+- [x] Test adapters for frozen v1 export/subprocess, plain single agent with tools, external context without semantic calls, dynamic swarm RLM, and single-root RLM ablation. Spy arms must never receive gold. Require equal configured evidence/rubric/budget/deadline and explicit enforcement-difference metadata.
+- [x] Run `uv run pytest tests/test_evaluation.py -q`; confirm failure.
+- [x] Implement evaluator-only five-field correctness, citation resolution/coverage, unsupported-claim review, status, settled/reserved cost, latency, peer/membership/call counts and execution errors. Separate deterministic scores from model-judged metrics and their costs. Record seeds, repetitions, pricing/model revisions and missing metrics; imported v1 results disclose missing controls.
+- [x] Rerun evaluation tests, `uv run pytest -q`, real-sandbox suite and `uv build`. Re-run scripted CLI plus observer checks; verify no v1 status changes and no runtime imports. Document any unperformed live checks and avoid superiority claims from a single demo. Commit final docs and results.
 
 ## Plan self-review
 

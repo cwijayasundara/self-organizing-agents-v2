@@ -12,7 +12,7 @@ class ExportArm:
 
     async def run(self, inputs):
         if self.path is None:
-            return ArmResult(self.name,'not_run','',{},'unavailable',{'reason':'No export supplied; live author-adapter integration remains gated'})
+            return ArmResult(self.name,'not_run','',{},'unavailable',{'reason':'No export or execution requested for this arm'})
         data=json.loads(self.path.read_text())
         if data.get('format_version')!=1:
             raise ValueError('arm export requires format_version=1')

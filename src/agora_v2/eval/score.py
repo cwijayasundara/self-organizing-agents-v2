@@ -19,5 +19,5 @@ def score(result,gold,manifest):
     valid=refs & set(evidence.files)
     return {'arm':result.arm,'status':result.status,'mode':result.mode,'field_correct':correct,'business_field_correctness':sum(correct.values())/len(KEYS),
             'evidence_file_coverage':len(valid)/len(evidence.files),'citation_errors':validate_memo(result.memo,evidence),
-            'unsupported_claims':None,'unsupported_claims_note':'Not independently judged by this deterministic export scorer',
-            **result.metrics,'metadata':result.metadata,'interpretation':'scripted mechanics only; no live comparison' if result.mode=='scripted' else 'imported export; enforcement differences must be reviewed'}
+            'unsupported_claims':result.metrics.get('unsupported_claims'),'unsupported_claims_note':'Independently judged during arm execution' if 'unsupported_claims' in result.metrics else 'Not independently judged by this deterministic export scorer',
+            **result.metrics,'metadata':result.metadata,'interpretation':'scripted mechanics only; no live comparison' if result.mode in ('scripted','offline_fake') else ('provider-backed execution; inspect enforcement differences' if 'matched_limits' in result.metadata else 'imported export; enforcement differences must be reviewed')}

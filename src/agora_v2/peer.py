@@ -5,8 +5,9 @@ from .actions import FIELDS
 
 
 class Peer:
-    def __init__(self, identity, model_key, mission, gateway, dispatcher):
+    def __init__(self, identity, model_key, mission, gateway, dispatcher,reasoner=None):
         self.identity,self.model_key,self.mission,self.gateway,self.dispatcher=identity,model_key,mission,gateway,dispatcher
+        self.reasoner=reasoner
         self.feedback={}
         self.failures=0
 
@@ -40,9 +41,13 @@ class Peer:
                            'brief':self.mission.brief,'rubric':self.mission.rubric,'evidence_metadata':[asdict(m) for m in self.dispatcher.evidence.metadata()],
                            'snapshot':snapshot,'feedback':self.feedback,
                            'phase':purpose,'actions':{k:sorted(FIELDS[k]) for k in sorted(allowed)}},ensure_ascii=False)
-        response=await self.gateway.call(ModelRequest(self.model_key,prompt,2000),purpose,execution)
+        if self.reasoner is None:
+            response_content=(await self.gateway.call(ModelRequest(self.model_key,prompt,2000),purpose,execution)).content
+        else:
+            result=await self.reasoner.reason(self.model_key,prompt,self.reasoner.evidence_handles,execution,leaf_model=self.reasoner.leaf_model)
+            response_content=self.dispatcher.context.get(result['handle'])[0]
         try:
-            action=json.loads(response.content)
+            action=json.loads(response_content)
             if not isinstance(action,dict) or action.get('type') not in allowed:
                 raise ValueError('action is outside the metered phase')
             if purpose=='finalization' and action['type'] in ('claim','publish') and action.get('task_id')!=final_id:

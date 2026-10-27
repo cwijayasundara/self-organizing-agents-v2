@@ -1,30 +1,17 @@
 # Implementation status — 2026-10-27
 
-The first offline slice is implemented on `feat/dynamic-swarm`. The complete design is not yet delivered.
+All planned code is implemented. Paid operational verification awaits user-supplied GLM/DeepSeek keys and an explicit spend cap. No paid requests, live benchmark results or invoice reconciliation are claimed.
 
-Implemented: independent package and copied evidence fixture/provenance; atomic SQLite tasks/claims; fencing; independently reviewed versioned scope and artifacts; bounded helper lifecycle; conservative model reservations and unresolved billing; shared execution slots; validated peer actions and external context; scripted replay; outcome checks; every terminal status and shutdown traces; real Docker context/semantic-call bridge; read-only browser observer; held-out export scoring.
+Delivered: independent package/fixture/provenance; transactional task claims and fencing; independently reviewed scope/artifacts; bounded helper membership; conservative reservations, cache-aware reported-token accounting and unresolved liability; shared peer/leaf slots; external context; isolated authors' RLM root/leaf integration; direct GLM/DeepSeek adapters; capped smoke and autonomous live CLI; live/read-only observer and truthful replay; all five executable architecture arms; independent rubric/unsupported-claim judging; repetitions, one outer comparison cap and JSON/Markdown reports.
 
-The replay is scripted, its model usage/pricing synthetic, and its outcome-check response scripted. It exercises actual ledger transitions. The separate Docker tests exercise actual isolated generated Python and programmatic fake-model calls. Neither establishes autonomous live behavior or architectural superiority.
+The authors' package is pinned by source revision/archive hash and a complete sandbox dependency lock. Root/leaf/batch requests are metered outside the interpreter, depth is bounded, and cancellation tears down the actual container. The first full fake-provider integration completed a round-robin swarm with helper admission/review/retirement, a programmatic author leaf call and a final memo within 40 calls. Fake/scripted results are labeled mechanics-only.
 
-Remaining: author-package root/leaf integration with gateway reservations, shared scheduling, cancellation and isolation; provider adapters and current model/pricing selection; explicitly capped live usage/subcall smoke; actual baseline runners, independent claim judging and repeated architectural comparisons. The live preflight always refuses dispatch until integration is verified. Export scoring marks missing arms `not_run` and unmeasured claim judgments `null`.
+Frozen v1 runs unchanged in an external process through public model injection. It uses only materialized manifest evidence, receives no provider keys/gold, and shares host spending/call limits. Its original fixed roster/template and scheduling differences are disclosed. V1 Git status remains unchanged.
 
-Verification:
+Verification: 74 offline tests passed; 14 real container/v1 integration tests passed. The latter covers actual upstream RLM execution, batch and named-model leaf routing, missing usage and caps, cancellation/cleanup, full peer integration, isolated external-context ablation, single-root RLM, capped smoke and frozen-v1 native model/tool execution. The standalone wheel and browser observer were verified in the initial slice; the final build is reverified with this delivery.
 
-- Offline suite: 53 passed; three real-container tests excluded by the default marker.
-- Real Docker suite: three passed, including active cancellation, submitted liability, no host credentials/gold, no unrestricted network, read-only root, output/timeout limits, shared-slot handoff and container removal.
-- Fresh scripted CLI replay: completed with no issues, 20 metered synthetic model calls and independently recorded helper decisions/reviews.
-- Export scorer: five business fields correct; four missing architectural arms explicitly not run.
-- Wheel/sdist build passed. Built wheel installed without dependencies in a fresh `/tmp` environment; replay completed from `/tmp`. Wheel includes fixture, observer assets and worker; no gold files.
-- Browser inspected at desktop and emulated 390×844 viewport; document width equals 390 pixels. Start/Latest controls moved between 0 and 128 actual events.
-- V1 Git status remains clean at the original inspected revision.
+Fresh review found and reproduced slow-call lease expiry, staged edits bypassing frozen-source verification, and nonmanifest gold exposure in v1. Regression fixes use bounded run-length live leases, HEAD-based worktree/index verification and a manifest-only snapshot. Additional regressions cover outer-cap overruns, source alias leaf routing, complete judge evidence, cleanup failures, failed-owner release and global repair exhaustion. Cache-read metadata and seed prompt disclosure were corrected. No review findings remain intentionally deferred.
 
-Fresh review reproduced five Important defects: stale final reapproval, unusable review reserve, cancelled parent reacquisition, gold reachable under custom evidence roots, and malformed-summary scoring. All were fixed with failing-then-passing regression tests. Two observer findings were regraded Important for truthful replay: completed database status and showing a future memo at an earlier cursor. Both were fixed with regressions. Final inspection also added bounded artifact previews and no-progress stopping, with regression tests. No review minors remain deferred.
+Remaining operational steps: set keys locally, choose a total paid allowance, run the implemented smoke command, then run the implemented repeated comparison command. Record actual completion/quality/cost/latency and any provider-specific issues; offline tests do not replace these measurements. No code task is represented by an always-refusing stub or an unavailable architecture placeholder.
 
-Decisions and costs if wrong:
-
-1. Use the supplied checkout on a new feature branch instead of an unrequested worktree. Cost: less filesystem isolation.
-2. Verify the CLI entry point in Task 7, where behavior was defined. Cost: later entry-point defect detection; installed-wheel replay now verifies it.
-3. Store helper budgets as integer microdollars rather than floating USD. Cost: external callers must convert units.
-4. Grant sandbox evidence through handles rather than a host directory mount. Cost: code expecting a `/data` filesystem API must adapt.
-5. Keep live author-package integration gated after the upstream limit-method probe. Cost: live delivery is delayed; the separate Docker mechanism is explicitly identified.
-6. Continue independent observer/export-scoring work while live integration remains pending. Cost: this slice cannot run live comparisons.
+Decisions and costs: use the existing feature checkout (less filesystem isolation); microdollar budgets (caller conversion); handle-scoped sandbox evidence (code expecting `/data` must adapt); version-specific author backend seam (upstream upgrades need migration); serialized author/native-v1 model RPC (lower concurrency/latency); DeepSeek peak-tariff upper estimates (off-peak invoices may be lower); prompt seed metadata without guaranteed provider RNG; frozen-v1 native scheduling/lease differences explicitly reported.
