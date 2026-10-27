@@ -1,0 +1,7 @@
+department,role_type,headcount,pct_in_favour,burnout_score_0_10,pct_worried_about_coverage
+Engineering,knowledge,180,81,6.1,12
+Product and Design,knowledge,60,84,5.8,10
+Finance and Legal,knowledge,40,72,5.2,15
+Sales,knowledge,90,66,6.4,28
+Customer Support,shift,170,41,7.9,74
+Operations,shift,60,55,6.6,48

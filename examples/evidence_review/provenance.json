@@ -1,0 +1,18 @@
+{
+  "repository": "self_organizing_agents_v1.0",
+  "revision": "b2bc646aa51b7444a22670283d462b59b7ddde22",
+  "source": "examples/evidence_review",
+  "files": {
+    "README.md": "13f9d2ff4bf67a321463989c44d2fbbe25a38fd43637389884bfae6f927a6200",
+    "cost_model.csv": "2d54d1f788cdeec4a9b7ab7c4d5546a129e5cb79d2ec291158d5bfc312cc7193",
+    "flexweek_whitepaper.md": "b7bafbed117751f7b7884fe163f8cc5530c28b45cf52bd1002d19800a6273013",
+    "news_business_daily.md": "4fb134a9db9f1fec0b65741d79e9a453016dbbf6d2ad46b7e8260bf27e023d1b",
+    "retraction_notices.md": "8648fe7e0f8e79d4f6b110bef99e723209f484e3510dcb69a2610decf201e054",
+    "staff_survey.csv": "e0ca35fe861646a44cb9d7108ef346e96f0e6885ea72d6256167775f3b99b1ff",
+    "studies/harlow_2025.md": "0128de9bbeeaa6c157f2e9976d1406e9f9beb4c48f57adcd2ba476377939b7e1",
+    "studies/nordvik_2025.md": "ea49497d5fdd67722fa0e252fbffff74646b5ac1497dc3ea9bb8e9daa2eee63e",
+    "studies/okafor_lind_2024.md": "e5f0e0a475154e524118d1386b604419f22ec1caf985f173b8c612639705e6f7"
+  },
+  "brief_sha256": "16579c0141ebd61ab39e74bc35815b98d4480bc5bc10aca2c7657002e7067eb6",
+  "gold_sha256": "2d0699b74599f6136c30e3cb34490e07abbdac27a46541d2f6a52888cc72247f"
+}
