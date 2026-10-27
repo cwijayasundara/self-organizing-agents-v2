@@ -19,7 +19,7 @@ class Gateway:
             raise AccountingError('unbounded model request')
         # Byte count plus adapter envelope allowance conservatively bounds tokens.
         reserved=price.cost(len(request.prompt.encode())+1024,request.max_output_tokens)
-        ident=self.budget.reserve(execution.identity,purpose,reserved)
+        ident=self.budget.reserve(getattr(execution,"billing_identity",execution.identity),purpose,reserved)
         self.budget.submitted(ident)
         try:
             response=await self.models[request.model_key].complete(request)

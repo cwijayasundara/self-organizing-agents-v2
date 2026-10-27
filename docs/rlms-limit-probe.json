@@ -1,0 +1,8 @@
+{
+  "revision": "d04208afbad29ca675ab13478c40ee8bebc84bfe",
+  "probe": "extracted upstream _check_iteration_limits, fake usage only",
+  "missing_cost_passed_limit_check": true,
+  "overspend_detected_after_usage": true,
+  "full_adapter_verified": false,
+  "live_gate": "closed"
+}
