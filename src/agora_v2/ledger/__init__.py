@@ -4,12 +4,13 @@ from pathlib import Path
 import sqlite3
 import time
 
+from .scope import Scope, CompletionSnapshot
 from .schema import SCHEMA
 from .tasks import Task, TaskSpec, Claim, ClaimResult, Tasks
 from .artifacts import Artifact, Artifacts
 
 
-class Ledger(Tasks, Artifacts):
+class Ledger(Tasks, Artifacts, Scope):
     def __init__(self, path: Path, clock=time.time):
         self.path = Path(path)
         self.clock = clock
