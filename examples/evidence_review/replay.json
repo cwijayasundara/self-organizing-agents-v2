@@ -1,0 +1,209 @@
+[
+  {
+    "peer": "p1",
+    "action": {
+      "type": "propose_task",
+      "key": "evidence",
+      "objective": "Review source credibility and department outcomes",
+      "schema": {
+        "type": "string"
+      },
+      "evidence": [
+        "studies/harlow_2025.md",
+        "retraction_notices.md",
+        "flexweek_whitepaper.md"
+      ],
+      "criteria": [
+        "discount retraction",
+        "report subgroup effects",
+        "check headline claims"
+      ]
+    }
+  },
+  {
+    "peer": "p2",
+    "action": {
+      "type": "propose_task",
+      "key": "cost",
+      "objective": "Recompute all cost lines independently",
+      "schema": {
+        "type": "string"
+      },
+      "evidence": [
+        "cost_model.csv"
+      ],
+      "criteria": [
+        "recomputed total",
+        "quantified mismatch"
+      ]
+    }
+  },
+  {
+    "peer": "p3",
+    "action": {
+      "type": "propose_scope",
+      "required_task_ids": [
+        "$task:evidence",
+        "$task:cost"
+      ],
+      "base_version": 0
+    }
+  },
+  {
+    "peer": "p1",
+    "action": {
+      "type": "review_scope",
+      "proposal_id": "$scope",
+      "approve": true,
+      "reason": "Both analyses are required by the original brief"
+    }
+  },
+  {
+    "peer": "p3",
+    "action": {
+      "type": "read_evidence",
+      "ref": "studies/harlow_2025.md",
+      "start": 0,
+      "length": 3000
+    }
+  },
+  {
+    "peer": "p3",
+    "action": {
+      "type": "finding",
+      "content": "The unchanged overall average hides a customer support decline of 8.7% and a 31% increase in wait time.",
+      "evidence": [
+        "studies/harlow_2025.md"
+      ]
+    }
+  },
+  {
+    "peer": "p1",
+    "action": {
+      "type": "propose_helper",
+      "capability": "arithmetic",
+      "task_ids": [
+        "$task:cost"
+      ],
+      "model_key": "two",
+      "budget_micro": 100000,
+      "evidence": [
+        "cost_model.csv"
+      ],
+      "reason": "An independent cost partition needs line-item reconciliation after the evidence discovery"
+    }
+  },
+  {
+    "peer": "p2",
+    "action": {
+      "type": "review_helper",
+      "proposal_id": "$helper",
+      "approve": true
+    }
+  },
+  {
+    "peer": "p4",
+    "action": {
+      "type": "claim",
+      "task_id": "$task:cost"
+    }
+  },
+  {
+    "peer": "p4",
+    "action": {
+      "type": "read_evidence",
+      "ref": "cost_model.csv",
+      "start": 0,
+      "length": 3000
+    }
+  },
+  {
+    "peer": "p4",
+    "action": {
+      "type": "publish",
+      "task_id": "$task:cost",
+      "content": "Cost line items total EUR 507,000, exceeding the stated EUR 435,000 by EUR 72,000. Staffing costs dominate. [cost_model.csv]",
+      "evidence": [
+        "cost_model.csv"
+      ]
+    }
+  },
+  {
+    "peer": "p1",
+    "action": {
+      "type": "review_artifact",
+      "artifact_id": "$artifact:cost",
+      "approve": true,
+      "reason": "Independently recomputed 36000+45000+22000+312000+52000+40000=507000; discrepancy 72000"
+    }
+  },
+  {
+    "peer": "p4",
+    "action": {
+      "type": "retire",
+      "reason": "Independent cost partition is published and reviewed"
+    }
+  },
+  {
+    "peer": "p3",
+    "action": {
+      "type": "claim",
+      "task_id": "$task:evidence"
+    }
+  },
+  {
+    "peer": "p3",
+    "action": {
+      "type": "publish",
+      "task_id": "$task:evidence",
+      "content": "Discount the retracted Okafor/Lind paper. FlexWeek reports 4.1% average output growth, not its 40% headline. Harlow finds support output -8.7%; Nordvik is stronger randomized evidence limited to knowledge roles. [retraction_notices.md] [flexweek_whitepaper.md] [studies/harlow_2025.md] [studies/nordvik_2025.md]",
+      "evidence": [
+        "retraction_notices.md",
+        "flexweek_whitepaper.md",
+        "studies/harlow_2025.md",
+        "studies/nordvik_2025.md"
+      ]
+    }
+  },
+  {
+    "peer": "p2",
+    "action": {
+      "type": "review_artifact",
+      "artifact_id": "$artifact:evidence",
+      "approve": true,
+      "reason": "Source designs, retraction notice, headline tables and subgroup effects checked"
+    }
+  },
+  {
+    "peer": "p1",
+    "action": {
+      "type": "claim",
+      "task_id": "$task:final"
+    }
+  },
+  {
+    "peer": "p1",
+    "action": {
+      "type": "publish",
+      "task_id": "$task:final",
+      "content": "Pilot knowledge teams; retain five-day coverage for shift teams while testing service and staffing effects. [studies/nordvik_2025.md] [studies/harlow_2025.md]\n\nNordvik\u2019s randomized, peer-reviewed knowledge-work trial found output per employee -0.4% (not significant), output per actual hour +5.9%, fewer sick days and attrition falling from 14% to 10%. Actual hours fell less than contracted hours, limiting a literal 32-hour interpretation. [studies/nordvik_2025.md]\n\nHarlow\u2019s non-peer-reviewed, self-selected mixed-workforce study found unchanged aggregate output but knowledge output +5.2% and customer-support output -8.7%; waits rose 31%. Wellbeing and retention improved, but shift coverage is a material constraint. [studies/harlow_2025.md]\n\nDiscount the retracted Okafor/Lind source. FlexWeek has a commercial conflict: its 40% headline describes the best self-rated team, while average output rose only 4.1% across 14 clients. [retraction_notices.md] [flexweek_whitepaper.md]\n\nCost lines sum to EUR 507,000 rather than EUR 435,000, a EUR 72,000 discrepancy. Additional support staffing costs EUR 312,000. Support has the highest burnout and 74% coverage concern, warranting separate planning. [cost_model.csv] [staff_survey.csv]\n\nUse a time-bounded pilot with output, actual hours, wellbeing, retention and coverage checks. These small studies cannot establish company-wide gains; pilot timing and implementation detail remain unresolved. [studies/nordvik_2025.md] [studies/harlow_2025.md]\nRESEARCH_SUMMARY\n```json\n{\"verdict\":\"pilot_knowledge_teams\",\"retracted_source\":\"studies/okafor_lind_2024.md\",\"inflated_claim_source\":\"flexweek_whitepaper.md\",\"harmed_group\":\"Customer Support\",\"cost_mismatch_eur\":72000}\n```",
+      "evidence": [
+        "studies/nordvik_2025.md",
+        "studies/harlow_2025.md",
+        "retraction_notices.md",
+        "flexweek_whitepaper.md",
+        "cost_model.csv",
+        "staff_survey.csv"
+      ]
+    }
+  },
+  {
+    "peer": "p2",
+    "action": {
+      "type": "review_artifact",
+      "artifact_id": "$artifact:final",
+      "approve": true,
+      "reason": "Original rubric coverage, citations, limitations and five summary fields checked independently"
+    }
+  }
+]

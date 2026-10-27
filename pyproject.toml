@@ -23,3 +23,6 @@ dev = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2"]
 asyncio_mode = "auto"
 addopts = "-m 'not live and not sandbox'"
 markers = ["live: explicit capped provider smoke", "sandbox: real container isolation"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"examples/evidence_review" = "agora_v2/data/evidence_review"
