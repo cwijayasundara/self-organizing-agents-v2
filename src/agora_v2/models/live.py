@@ -1,4 +1,4 @@
-"""Bounded, non-streaming direct GLM/DeepSeek adapters; credentials stay here."""
+"""Bounded Fireworks GLM/DeepSeek/MiniMax and direct-provider adapters."""
 import json
 import math
 import os
@@ -12,14 +12,27 @@ from ..budget import AccountingError
 ENDPOINTS = {
     'glm': 'https://api.z.ai/api/paas/v4/chat/completions',
     'deepseek': 'https://api.deepseek.com/chat/completions',
+    'fireworks': 'https://api.fireworks.ai/inference/v1/chat/completions',
 }
-# USD / million tokens equals microdollars / token. DeepSeek uses the peak
-# upper tariff for budget safety; invoice reconciliation can lower that estimate.
+# USD / million tokens equals microdollars / token. Direct DeepSeek uses
+# conservative peak rates; Fireworks uses its Standard serverless rates.
 CATALOG = {
     'glm': {'glm-5.3-flash': Price(.15, .50, .03), 'glm-5.3': Price(1.4, 4.4, .26), 'glm-4.7': Price(.6, 2.2, .11)},
     'deepseek': {'deepseek-flash': Price(.3, 1.2, .006), 'deepseek-v4-pro': Price(1.32, 3.96, .044)},
+    'fireworks': {
+        'accounts/fireworks/models/glm-5p3-flash': Price(.15, .50, .03),
+        'accounts/fireworks/models/deepseek-v4p1-flash-1017': Price(.3, 1.2, .006),
+        'accounts/fireworks/models/minimax-m3p1-flash': Price(.15, .60, .015),
+    },
 }
-PRICE_VERIFIED_DATE = '2026-10-27'
+# Direct tariffs verified 2026-10-27; Fireworks Standard verified 2026-10-28.
+PRICE_VERIFIED_DATES = {'glm': '2026-10-27', 'deepseek': '2026-10-27', 'fireworks': '2026-10-28'}
+FIREWORKS_FAMILIES = {
+    'accounts/fireworks/models/glm-5p3-flash': 'glm',
+    'accounts/fireworks/models/deepseek-v4p1-flash-1017': 'deepseek',
+    'accounts/fireworks/models/minimax-m3p1-flash': 'minimax',
+}
+COST_BASIS = 'reported token/cache usage at verified provider tariffs; estimates, not reconciled invoices'
 
 
 class LiveUnavailable(RuntimeError):
@@ -55,8 +68,9 @@ def validate_live_config(config: dict, budget_usd: float | None):
     for key, spec in models.items():
         if not isinstance(spec, dict) or set(spec) - {'provider', 'id', 'family', 'key_env', 'input_micro_per_token', 'cached_input_micro_per_token', 'output_micro_per_token'}:
             raise ValueError('unknown model fields or arbitrary endpoint')
-        if spec.get('family') != spec.get('provider'):
-            raise ValueError('model family must identify the actual provider family')
+        family = FIREWORKS_FAMILIES.get(spec.get('id')) if spec.get('provider') == 'fireworks' else spec.get('provider')
+        if not family or spec.get('family') != family:
+            raise ValueError('model family must match the allowlisted model family')
         if not re.fullmatch('[A-Z][A-Z0-9_]*', spec.get('key_env', '')):
             raise ValueError('model needs an environment variable name, not a literal key')
         model_price(spec)
@@ -82,7 +96,9 @@ class LiveModel:
         if request.tools:
             body['tools']=list(request.tools)
             body['tool_choice']='auto'
-        if self.provider == 'glm' and self.spec['id'].startswith('glm-5.3'):
+        if self.provider == 'fireworks':
+            body.update({'service_tier': 'default', 'reasoning_effort': 'low' if FIREWORKS_FAMILIES[self.spec['id']] in ('glm', 'minimax') else 'none'})
+        elif self.provider == 'glm' and self.spec['id'].startswith('glm-5.3'):
             body.update({'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low'})
         else:
             body['thinking'] = {'type': 'disabled'}

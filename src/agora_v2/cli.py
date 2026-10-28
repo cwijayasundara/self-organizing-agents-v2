@@ -20,7 +20,7 @@ def main():
     replay_parser=sub.add_parser('replay',help='Run explicitly scripted offline transitions')
     replay_parser.add_argument('--out',type=Path,required=True)
     inspect=sub.add_parser('inspect');inspect.add_argument('path',type=Path)
-    run=sub.add_parser('run',help='Run autonomous GLM/DeepSeek peers with isolated authors RLM')
+    run=sub.add_parser('run',help='Run autonomous GLM/DeepSeek/MiniMax peers (Fireworks by default) with isolated authors RLM')
     run.add_argument('--mission',type=Path,required=True)
     run.add_argument('--models',type=Path,required=True)
     run.add_argument('--budget-usd',type=float,required=True)

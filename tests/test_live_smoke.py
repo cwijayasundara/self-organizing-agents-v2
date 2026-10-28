@@ -19,7 +19,7 @@ async def test_smoke_requires_real_author_subcall_and_preserves_usage(tmp_path):
     report=await run_smoke(config,.1,tmp_path/'smoke',models={k:Fake() for k in config['models']})
     assert report['status']=='completed'
     assert report['mode']=='offline_fake'
-    assert report['cost']['calls']==4
+    assert report['cost']['calls']==5
     assert report['semantic_calls']==1
     assert report['cost']['unresolved_micro']==0
     assert (tmp_path/'smoke/smoke.json').exists()

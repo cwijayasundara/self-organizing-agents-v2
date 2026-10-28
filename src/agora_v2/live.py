@@ -11,7 +11,7 @@ from .evidence import EvidenceStore
 from .ledger import Ledger, TaskSpec
 from .membership import Membership
 from .models import Gateway
-from .models.live import LiveModel, model_price, validate_live_config, PRICE_VERIFIED_DATE
+from .models.live import LiveModel, model_price, validate_live_config, PRICE_VERIFIED_DATES, COST_BASIS
 from .profiles import Profile
 from .runtime import Runtime
 from .slots import ExecutionSlots
@@ -61,7 +61,7 @@ async def build_live_runtime(mission, config, budget_usd, output, *, models=None
     executor.leaf_model=config.get('leaf',checker)
     dispatcher=ActionDispatcher(ledger,membership,evidence,context,executor,lease_seconds=mission.limits.wall_seconds)
     runtime=Runtime(mission,ledger,membership,gateway,budget,slots,dispatcher,output,'offline_fake' if models is not None else 'live',reasoner=executor)
-    runtime.model_config={'models':config['models'],'bootstrap':config['bootstrap'],'checker':checker,'leaf':executor.leaf_model,'price_verified_date':PRICE_VERIFIED_DATE,'author_image':verified,'lease_seconds':mission.limits.wall_seconds,'cost_basis':'reported token usage with configured tariffs; DeepSeek peak upper tariff (invoice may be lower)'}
+    runtime.model_config={'models':config['models'],'bootstrap':config['bootstrap'],'checker':checker,'leaf':executor.leaf_model,'price_verified_date':min(PRICE_VERIFIED_DATES[s['provider']] for s in config['models'].values()),'author_image':verified,'lease_seconds':mission.limits.wall_seconds,'cost_basis':COST_BASIS}
     (output/'configuration.json').write_text(json.dumps(runtime.model_config,indent=2)+'\n')
     ledger.event('runtime','run_started',{'mode':runtime.mode,'limits':asdict(mission.limits),'configuration':runtime.model_config})
     return runtime

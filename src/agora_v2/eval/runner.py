@@ -53,7 +53,7 @@ def _markdown(report):
             continue
         claims=r.get('unsupported_claims')
         lines.append(f"| {r['arm']} | {r.get('metadata',{}).get('seed','—')} | {r['status']} | {r['business_field_correctness']:.2f} | {r['evidence_file_coverage']:.2f} | {len(claims) if isinstance(claims,list) else 'unmeasured'} | {money(r.get('settled_micro'))} | {money(r.get('unresolved_micro'))} | {r.get('model_calls','unknown')} | {r.get('latency_seconds','unknown')} |")
-    lines.extend(['','Token-rated costs are not invoice reconciliation. DeepSeek uses the verified peak tariff as an upper estimate; off-peak invoices can be lower. Seeds control prompts/scheduling, not guaranteed provider RNG. Small or scripted runs establish no superiority.','', '## Enforcement differences',''])
+    lines.extend(['','Token-rated costs use the configured provider tariffs and reported usage; they are not reconciled invoices. Seeds control prompts/scheduling, not guaranteed provider RNG. Small or scripted runs establish no superiority.','', '## Enforcement differences',''])
     for r in report['results']:
         differences=r.get('metadata',{}).get('enforcement_differences',[])
         if differences:lines.append(f"- {r['arm']}: "+'; '.join(differences))

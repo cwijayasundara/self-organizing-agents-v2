@@ -18,7 +18,7 @@ from ..evidence import EvidenceStore
 from ..ledger import Ledger,TaskSpec
 from ..live import build_live_runtime,evidence_handles
 from ..models import Gateway,ModelRequest
-from ..models.live import LiveModel,model_price,validate_live_config
+from ..models.live import LiveModel,model_price,validate_live_config,COST_BASIS
 from ..runtime import RunResult
 from ..slots import ExecutionSlots
 from ..trace import export_run
@@ -63,7 +63,7 @@ class Session:
         routed=dict(implementations);routed['checker']=implementations[checker];prices['checker']=prices[checker]
         self.gateway=Gateway(routed,prices,self.budget)
         self.final_memo=''
-        self.model_config={'models':config['models'],'root_model':self.solver,'leaf_model':self.leaf,'checker_model':checker,'seed':seed,'seed_scope':'prompt seed metadata only; provider sampling is not guaranteed deterministic','cost_basis':'reported tokens at configured tariffs; DeepSeek peak upper estimate'}
+        self.model_config={'models':config['models'],'root_model':self.solver,'leaf_model':self.leaf,'checker_model':checker,'seed':seed,'seed_scope':'prompt seed metadata only; provider sampling is not guaranteed deterministic','cost_basis':COST_BASIS}
         self.ledger.event('runtime','run_started',{'mode':self.mode,'limits':asdict(self.mission.limits),'configuration':self.model_config})
         self.executor=None
 

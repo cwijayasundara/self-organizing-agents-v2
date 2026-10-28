@@ -1,6 +1,41 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agora · Swarm observer</title><link rel="stylesheet" href="/style.css"></head>
-<body><header><div><span class="eyebrow">AGORA / V2</span><h1>Around the shared ledger</h1><p>Evidence, independent reviews, and temporary capacity.</p></div><span id="mode" class="badge">Loading run…</span></header>
-<main><section class="controls"><button id="play">Play events</button><button id="start">Start</button><button id="end">Latest</button><input id="cursor" aria-label="Event timeline" type="range" min="0" value="0"><output id="position"></output></section>
-<div id="metrics" class="metrics"></div><div class="columns"><section><h2>Peers <span class="muted">claim and review</span></h2><div id="peers" class="peers"></div><h2>Shared work</h2><div id="tasks"></div><h2>Semantic calls <span class="muted">analysis only</span></h2><div id="leaves"></div></section><section><h2>What happened</h2><ol id="events" class="events"></ol></section></div>
-<section class="memo"><h2>Final memo</h2><p id="memo-note" class="muted">Appears when published in the event stream.</p><pre id="memo"></pre></section><p class="footer">Observer access is read-only. Scripted replay demonstrates transitions; it does not establish live autonomy or business superiority.</p></main><script src="/app.js" defer></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Agora · Agents at work</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Agora home"><span class="brand-mark">a</span>agora<span class="version">v2</span></a><div class="topbar-right"><span class="readonly">Read-only observer</span><span id="connection" class="connection">Connecting</span></div></header>
+  <main>
+    <section class="intro"><div><span class="eyebrow">THE SELF-ORGANIZING TEAM</span><h1>Agents at work<span>.</span></h1><p>Independent peers. Shared evidence. Decisions you can follow.</p></div><div class="mode-box"><span id="mode" class="badge">Loading run…</span><p id="mode-note">Connecting to the shared ledger.</p></div></section>
+    <section class="transport" aria-label="Playback controls"><button id="play" class="primary" disabled>Play events</button><button id="step" disabled>Step</button><button id="start" disabled>Restart</button><button id="end" disabled>Latest</button><label class="speed">Speed<select id="speed"><option value="1100">0.5×</option><option value="650" selected>1×</option><option value="180">3×</option></select></label><input id="cursor" aria-label="Event timeline" type="range" min="0" max="0" value="0" disabled><output id="position">Waiting for events</output></section>
+    <div id="metrics" class="metrics" aria-label="Run metrics"></div>
+    <div class="workspace">
+      <div class="team-column">
+        <section class="panel swarm-panel"><div class="panel-heading"><div><span class="eyebrow">THE TEAM</span><h2>Around the shared board</h2></div><span id="active-count" class="count">0 active</span></div><p class="panel-hint">Select an agent for details, or the shared board to read its contents.</p><svg id="graph" viewBox="0 0 660 430" role="group" aria-label="Agents coordinating through the shared board"></svg><div id="graph-legend" class="legend"></div><div id="current-action" class="current-action" aria-live="polite">Waiting for the first event.</div></section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">SHARED WORK</span><h2>Task board</h2></div><span id="task-count" class="count">0 tasks</span></div><div id="tasks" class="task-board"></div></section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">BOUNDED ANALYSIS</span><h2>Semantic calls</h2></div><span id="leaf-count" class="count">0 calls</span></div><p class="panel-hint">Leaf calls analyze evidence; they do not claim tasks or vote.</p><div id="leaves" class="leaves"></div></section>
+      </div>
+      <section class="panel board-panel"><div class="panel-heading"><div><span class="eyebrow">COMMON MESSAGE BOARD</span><h2>The conversation, in the open</h2></div><div class="board-heading-actions"><span id="board-count" class="count">0 posts</span><button id="open-board">Open board</button></div></div><p class="panel-hint">Findings, shared artifacts, proposals, and independent reviews from the ledger.</p><div class="board-filters"><label>Author<select id="agent-filter"><option value="">All agents</option></select></label><label>Show<select id="type-filter"><option value="">All posts</option><option value="finding">Findings</option><option value="artifact">Artifacts</option><option value="review">Reviews</option><option value="coordination">Coordination</option></select></label><button id="clear-filter" class="quiet">Clear filters</button></div><div id="board" class="message-board" role="log" aria-label="Shared agent messages" aria-live="off"></div><p id="board-note" class="board-note">Agent messages are rendered verbatim. No private reasoning is inferred.</p></section>
+    </div>
+    <section class="panel agents-panel"><div class="panel-heading"><div><span class="eyebrow">PEER ROSTER</span><h2>Every identity, accounted for</h2></div><span class="panel-hint">Helpers join and retire as recorded.</span></div><div id="peers" class="peers"></div></section>
+    <section class="panel result-panel"><div class="panel-heading"><div><span class="eyebrow">THE DELIVERABLE</span><h2>Final memo</h2></div><span id="memo-status" class="count">Not published</span></div><p id="memo-note" class="panel-hint">Appears when an agent publishes it.</p><details id="mission"><summary>Original mission</summary><pre id="brief">Mission not recorded in this snapshot.</pre></details><pre id="memo" class="memo-content"></pre><p id="run-issues" class="issues"></p></section>
+    <details class="panel activity-panel"><summary>Event log <span class="panel-hint">Claims, model accounting, lifecycle, and runtime events</span></summary><ol id="events" class="events"></ol></details>
+    <footer><span>AGORA / V2</span>All activity comes from recorded ledger events. Scripted and fake-provider runs demonstrate mechanics; live model runs are labeled separately.</footer>
+  </main>
+  <dialog id="detail-dialog" aria-labelledby="detail-title"><div class="dialog-heading"><div><span id="detail-kind" class="eyebrow">AGENT DETAILS</span><h2 id="detail-title">Details</h2></div><button id="close-detail" aria-label="Close details">Close</button></div><div id="detail-body"></div></dialog>
+  <dialog id="board-dialog" class="board-dialog" aria-labelledby="board-dialog-title">
+    <div class="dialog-heading"><div><span class="eyebrow">COMMON MESSAGE BOARD</span><h2 id="board-dialog-title">Shared board · findings and reviews</h2></div><button id="board-dialog-close" aria-label="Close shared board">Close</button></div>
+    <p class="panel-hint">Full public posts at the selected moment in the run.</p>
+    <div class="board-dialog-filters">
+      <label>Author<select id="board-dialog-agent"><option value="">All authors</option></select></label>
+      <label>Type<select id="board-dialog-type"><option value="">All posts</option><option value="finding">Findings</option><option value="artifact">Artifacts</option><option value="review">Reviews</option><option value="coordination">Coordination</option></select></label>
+      <label class="board-search">Search<input id="board-dialog-search" type="search" placeholder="Search messages, evidence, tasks…"></label>
+      <label>Order<select id="board-dialog-order"><option value="desc">Newest first</option><option value="asc">Oldest first</option></select></label>
+      <button id="board-dialog-clear" class="quiet">Clear filters</button>
+    </div>
+    <p id="board-dialog-count" class="panel-hint"></p><div id="board-dialog-list" class="message-board" role="log" aria-label="Full shared board contents" aria-live="off"></div>
+  </dialog>
+  <script src="/app.js" defer></script>
+</body>
+</html>
